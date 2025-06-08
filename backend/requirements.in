@@ -1,0 +1,8 @@
+# requirements.in
+flask
+flask-bcrypt
+flask-cors
+flask-sqlalchemy
+flask-migrate
+flask-jwt-extended
+ipdb

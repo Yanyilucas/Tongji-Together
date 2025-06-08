@@ -27,7 +27,7 @@
   </nut-form>
   <nut-row>
     <nut-col :span="12">
-       <nut-button block type="primary">登录</nut-button>
+       <nut-button block type="primary" @click="handleLogin">登录</nut-button>
     </nut-col>
     <nut-col :span="12">
       <nut-button block type="primary" plain @click="showBottom = true"> 注册 </nut-button>
@@ -42,6 +42,14 @@
     <nut-divider :custom-style="{ color: '#1989fa', borderColor: '#1989fa', padding: '0 16px' }">
       注册账号
     </nut-divider>
+    <nut-form-item label="用户名">
+      <nut-input
+        v-model="registerData.name"
+        class="nut-input-text"
+        placeholder="请输入用户名"
+        type="text"
+      />
+    </nut-form-item>
     <nut-form-item label="手机号">
       <nut-input
         v-model="registerData.tel"
@@ -108,7 +116,39 @@ const registerData = reactive({
 
 
 const showBottom = ref(false)
+async function handleLogin() {
+  if (!loginData.tel || !loginData.password) {
+    uni.showToast({ title: '请输入手机号和密码', icon: 'none' });
+    return;
+  }
 
+  try {
+    const response = await uni.request({
+      url: 'http://100.80.26.241:3001/login',  // 后端 Flask 服务地址
+      method: 'POST',
+      data: {
+        Tel: loginData.tel,
+        password: loginData.password
+      },
+      header: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const { statusCode, data } = response;
+    console.log('响应状态:', statusCode, '响应数据:', data);
+    // if (statusCode === 200) {
+    //   uni.showToast({ title: '登录成功', icon: 'success' });
+    //   console.log('token:', data.token);
+    //   // 你可以在这里保存 token，例如放到 localStorage、Pinia 等
+    // } else {
+    //   uni.showToast({ title: data.error || '登录失败', icon: 'none' });
+    // }
+  } catch (err) {
+    console.error('请求失败:', err);
+    uni.showToast({ title: '请求失败', icon: 'none' });
+  }
+}
 
 </script>
 
