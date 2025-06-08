@@ -6,7 +6,7 @@
 </template>
 
 <script setup>
-import TabBar from '@/components/TabBar.vue'
+import TabBar from '@/layouts/TabBar.vue'
 </script>
 
 <style scoped>

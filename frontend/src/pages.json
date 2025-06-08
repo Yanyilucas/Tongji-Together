@@ -12,7 +12,7 @@
       "type": "home",
       "layout": "default",
       "style": {
-        "navigationBarTitleText": "uni-app"
+        "navigationBarTitleText": "首页"
       }
     },
     {
@@ -20,24 +20,34 @@
       "type": "page",
       "layout": "default",
       "style": {
-        "navigationBarTitleText": "互动"
+        "navigationBarTitleText": "发现"
       }
     },
     {
-      "path": "pages/login/login",
+      "path": "pages/user/user",
       "type": "page",
       "layout": "default",
       "style": {
-        "navigationBarTitleText": "登录"
+        "navigationBarTitleText": "用户"
+      }
     }
+  ],
+
+  "tabBar": {
+  "list": [
+    {
+      "pagePath": "pages/index/index",
+      "text": "首页"
     },
     {
-      "path": "pages/register/register",
-      "type": "page",
-      "layout": "default",
-      "style": {
-        "navigationBarTitleText": "注册"
-      }
+      "pagePath": "pages/interaction/interaction",
+      "text": "发现"
+    },
+     {
+      "pagePath": "pages/user/user",
+      "text": "我的"
     }
   ]
+}
+
 }

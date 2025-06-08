@@ -1,5 +1,5 @@
 <template>
-  <text> 发现界面</text>
+  <text> 用户界面</text>
 </template>
 <script setup>
 
