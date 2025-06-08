@@ -10,7 +10,7 @@
     {
       "path": "pages/index/index",
       "type": "home",
-      "layout": "default",
+      "layout": "defaultbar",
       "style": {
         "navigationBarTitleText": "首页"
       }
@@ -18,7 +18,7 @@
     {
       "path": "pages/interaction/interaction",
       "type": "page",
-      "layout": "default",
+      "layout": "defaultbar",
       "style": {
         "navigationBarTitleText": "发现"
       }
@@ -26,10 +26,18 @@
     {
       "path": "pages/user/user",
       "type": "page",
-      "layout": "default",
+      "layout": "defaultbar",
       "style": {
         "navigationBarTitleText": "用户"
       }
+    },
+    {
+    "path": "pages/user/login",
+    "type": "page",
+    "layout": "default",
+    "style": {
+      "navigationBarTitleText": "登录"
+    }
     }
   ],
 
