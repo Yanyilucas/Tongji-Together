@@ -22,33 +22,22 @@
       "style": {
         "navigationBarTitleText": "互动"
       }
+    },
+    {
+      "path": "pages/login/login",
+      "type": "page",
+      "layout": "default",
+      "style": {
+        "navigationBarTitleText": "登录"
     }
-  ],
-  "tabBar": {
-    "color": "#bfbfbf",
-    "selectedColor": "#1296db",
-    "borderStyle": "black",
-    "backgroundColor": "#ffffff",
-    "list": [
-      {
-        "pagePath": "pages/index/index",
-        "iconPath": "static/images/index_i_no.png",
-        "selectedIconPath": "static/images/index_i_yes.png",
-        "text": "首页"
-      },
-      {
-        "pagePath": "pages/interaction/interaction",
-        "iconPath": "static/images/interaction_i_no.png",
-        "selectedIconPath": "static/images/interaction_i_yes.png",
-        "text": "互动"
+    },
+    {
+      "path": "pages/register/register",
+      "type": "page",
+      "layout": "default",
+      "style": {
+        "navigationBarTitleText": "注册"
       }
-    ]
-  },
-  "globalStyle": {
-    "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "uni-app",
-    "navigationBarBackgroundColor": "#F8F8F8",
-    "backgroundColor": "#F8F8F8"
-  },
-  "subPackages": []
+    }
+  ]
 }

@@ -2,7 +2,7 @@ module.exports = {
   // 一行的字符数，如果超过会进行换行，默认为80，官方建议设100-120其中一个数
   printWidth: 100,
   // 一个tab代表几个空格数，默认就是2
-  tabWidth: 2,
+  tabWidth: 4,
   // 启用tab取代空格符缩进，默认为false
   useTabs: false,
   // 行尾是否使用分号，默认为true(添加理由:更加容易复制添加数据,不用去管理尾行)

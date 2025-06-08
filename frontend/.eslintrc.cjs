@@ -34,7 +34,7 @@ module.exports = {
   ],
   rules: {
     // 3. 注意要加上这一句，开启 prettier 自动修复的功能
-    'prettier/prettier': 'error',
+    'prettier/prettier': 'off',
     // turn on errors for missing imports
     'import/no-unresolved': 'off',
     // 对后缀的检测，否则 import 一个ts文件也会报错，需要手动添加'.ts', 增加了下面的配置后就不用了
