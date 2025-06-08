@@ -14,6 +14,8 @@
       :name="item.name"
     />
   </nut-tabbar>
+
+
 </template>
 
 <script setup>

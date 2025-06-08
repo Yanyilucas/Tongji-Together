@@ -1,6 +1,6 @@
 <template>
   <view>
-    <nut-button type="primary" @click="toLogin">登录 / 注册</nut-button>
+    <nut-button type="primary" @click="toLogin">登录</nut-button>
   </view>
 </template>
 
