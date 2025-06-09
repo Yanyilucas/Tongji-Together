@@ -131,7 +131,6 @@ def register():
     token = create_access_token(identity={'id': user.UserID, 'isDriver': user.isDriver})
     return jsonify({'message': '注册成功', 'token': token}), 201
 
-
 if __name__ == '__main__':
 	with app.app_context():
 		db.create_all()  # 确保所有表已创建

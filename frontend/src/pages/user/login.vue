@@ -101,8 +101,10 @@
 <script setup>
 import { reactive, ref, toRefs } from 'vue'
 import { useRequest } from '@/api'
-import userStore from '@/store/user';
+import {useUserStore} from '@/store/user';
 const {API_LOGIN_POST,API_REGISTER_POST} = useRequest()
+const userStore = useUserStore()
+
 
 // 表单数据响应式变量
 const showBottom = ref(false)
@@ -131,10 +133,20 @@ async function handleLogin() {
       Tel: loginData.tel,
       password: loginData.password
     })
-    uni.showToast({ title: res.message || '登录成功', icon: 'success' })
-    console.log(res.token)
-    userStore.setToken(res.token)
     
+    // console.log(res.token)
+    console.log('userStore:', userStore)
+    userStore.setToken(res.token)
+    console.log('准备回退')
+
+    //  setTimeout(() => {
+      uni.navigateBack()
+
+    uni.showToast({ title: res.message || '登录成功', icon: 'success' })
+    console.log('回退调用结束')
+   
+
+
   } catch (err) {
   console.error('登录失败:', err)
 
