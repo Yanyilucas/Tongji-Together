@@ -101,6 +101,7 @@
 <script setup>
 import { reactive, ref, toRefs } from 'vue'
 import { useRequest } from '@/api'
+import userStore from '@/store/user';
 const {API_LOGIN_POST,API_REGISTER_POST} = useRequest()
 
 // 表单数据响应式变量
@@ -132,6 +133,8 @@ async function handleLogin() {
     })
     uni.showToast({ title: res.message || '登录成功', icon: 'success' })
     console.log(res.token)
+    userStore.setToken(res.token)
+    
   } catch (err) {
   console.error('登录失败:', err)
 
