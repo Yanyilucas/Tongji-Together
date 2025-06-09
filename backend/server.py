@@ -12,7 +12,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required, verify_jwt_in_request
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-
+from flask_jwt_extended import decode_token, exceptions as jwt_exc
 
 db = SQLAlchemy()
 app = Flask(__name__, static_url_path='')
@@ -21,6 +21,10 @@ app.secret_key = '2251316#TJTX'
 app.config['JWT_SECRET_KEY'] = '2251316#TJTX'
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///TJTX.db"
 app.config['JWT_EXPIRATION_DELTA'] = timedelta(days=7)
+app.config['JWT_TOKEN_LOCATION'] = ['headers']
+app.config['JWT_HEADER_NAME'] = 'Authorization'
+app.config['JWT_HEADER_TYPE'] = 'Bearer'
+app.config['PROPAGATE_EXCEPTIONS'] = True
 # 配置上传文件夹
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static')
 if not os.path.exists(UPLOAD_FOLDER):
@@ -75,7 +79,6 @@ class User(db.Model):
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    # __import__('ipdb').set_trace()  # 调试用
     if not data:
         return jsonify({'error': 'No input data provided'}), 400
 	# 提取并验证数据
@@ -92,7 +95,15 @@ def login():
     if not existing_user.check_password(password):
         return jsonify({'error': '密码错误'}), 401
 	# 生成 JWT token
-    token = create_access_token(identity={'id': existing_user.UserID, 'isDriver': existing_user.isDriver})
+    token = create_access_token(identity=str(existing_user.UserID))
+    # try:
+    #     # 只校验签名，允许过期，忽略类型
+    #     decoded = decode_token(token, allow_expired=True)
+    #     print("✅ 刚生成的 token 成功解码：", decoded)
+    # except jwt_exc.JWTDecodeError as e:
+    #     # 如果这里失败，说明生成的 token 就有问题
+    #     print("❌ 生成后立即 decode 失败：", e)
+    
     return jsonify({'message': '登录成功', 'token': token}), 200
 
 @app.route('/register', methods=['POST'])
@@ -128,8 +139,25 @@ def register():
     db.session.commit()
 
     # 返回 JWT + 成功信息
-    token = create_access_token(identity={'id': user.UserID, 'isDriver': user.isDriver})
-    return jsonify({'message': '注册成功', 'token': token}), 201
+    return jsonify({'message': '注册成功'}), 201
+
+# @app.before_request
+# def log_headers():
+#     print("== headers ==")
+#     print(dict(request.headers))
+
+
+@app.route('/userinfo', methods=['GET'])
+@jwt_required()
+def get_user_info():
+    identity = get_jwt_identity()
+    print(f"🔑 Token 校验成功，用户 ID: {identity}")
+    user_id =int(identity)
+
+    user = User.query.filter_by(UserID=user_id).first()
+    if not user:
+        return jsonify({'error': '用户不存在'}), 404
+    return jsonify(user.serialize()), 200
 
 if __name__ == '__main__':
 	with app.app_context():

@@ -4,13 +4,17 @@ import { httpLogError, requestError, throttleToLogin } from './utils'
 export function createService() {
   const request = axios.create({ adapter: createUniAppAxiosAdapter() })
   request.interceptors.request.use(
-    (request) => {
-      return request
-    },
-    (err) => {
-      return Promise.reject(err)
+  (config) => {
+    const token = uni.getStorageSync('token')
+    if (token) {
+      config.headers = config.headers || {}
+      config.headers.Authorization = `Bearer ${token}`
     }
-  )
+    console.log('请求 headers:', config.headers)  // ✅ 打印 headers
+    return config
+  },
+  (err) => Promise.reject(err)
+)
 
   request.interceptors.response.use(
     (response) => {

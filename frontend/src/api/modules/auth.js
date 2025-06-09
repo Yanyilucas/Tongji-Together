@@ -16,4 +16,11 @@ export default {
       data
     })
   },
+
+  API_USERINFO_GET() {
+  return request({
+    url: '/userinfo',
+    method: 'get',
+  })
+}
 }

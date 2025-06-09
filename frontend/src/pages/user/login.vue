@@ -88,7 +88,7 @@
     <nut-radio :label="false" size="large">我是乘客</nut-radio>
   </nut-radio-group>
   </nut-cell>
-<nut-row>
+  <nut-row>
     <nut-col :span="24">
        <nut-button block type="primary" @click="handleRegister">注册账号</nut-button>
     </nut-col>
@@ -99,11 +99,10 @@
 </template>
 
 <script setup>
-import { reactive, ref, toRefs } from 'vue'
+import { reactive, ref} from 'vue'
 import { useRequest } from '@/api'
-import {useUserStore} from '@/store/user';
 const {API_LOGIN_POST,API_REGISTER_POST} = useRequest()
-const userStore = useUserStore()
+
 
 
 // 表单数据响应式变量
@@ -127,25 +126,14 @@ async function handleLogin() {
     uni.showToast({ title: '请输入手机号和密码', icon: 'none' })
     return
   }
-
   try {
     const res = await API_LOGIN_POST({
       Tel: loginData.tel,
       password: loginData.password
     })
-    
-    // console.log(res.token)
-    console.log('userStore:', userStore)
-    userStore.setToken(res.token)
-    console.log('准备回退')
-
-    //  setTimeout(() => {
-      uni.navigateBack()
-
+    uni.setStorageSync('token', res.token)  // 存储 token
+    uni.navigateBack()
     uni.showToast({ title: res.message || '登录成功', icon: 'success' })
-    console.log('回退调用结束')
-   
-
 
   } catch (err) {
   console.error('登录失败:', err)
@@ -154,7 +142,6 @@ async function handleLogin() {
     err?.response?.data?.error ||        // 后端自定义返回
     err?.message ||                      // Axios 错误消息
     '登录失败'                           // 兜底
-
   uni.showToast({ title: message, icon: 'none' })
 }
 }
@@ -182,6 +169,7 @@ async function handleRegister() {
     })
     uni.showToast({ title: res.message || '注册成功', icon: 'success' })
     // 保存 token，可选
+    loginData.tel = tel
     console.log('注册获得 token:', res.token)
     showBottom.value = false          // 关闭弹窗
     loginData.tel = tel               // 回填登录表单方便直接登录
