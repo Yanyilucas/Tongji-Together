@@ -95,6 +95,42 @@ def login():
     token = create_access_token(identity={'id': existing_user.UserID, 'isDriver': existing_user.isDriver})
     return jsonify({'message': '登录成功', 'token': token}), 200
 
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No input data provided'}), 400
+
+    # 提取并初步校验
+    name          = (data.get('name') or '').strip()
+    tel           = (data.get('tel') or '').strip().lower()
+    password      = (data.get('password') or '').strip()
+    confirm       = (data.get('confirmPassword') or '').strip()
+    is_driver     = bool(data.get('isDriver', False))
+
+    if not name:
+        return jsonify({'error': '用户名不能为空'}), 400
+    if not tel:
+        return jsonify({'error': '手机号不能为空'}), 400
+    if not password:
+        return jsonify({'error': '密码不能为空'}), 400
+    if password != confirm:
+        return jsonify({'error': '两次输入的密码不一致'}), 400
+
+    # 手机号唯一性检查
+    if User.query.filter_by(Tel=tel).first():
+        return jsonify({'error': '该手机号已注册'}), 400
+
+    # 创建并保存用户
+    user = User(Name=name, Tel=tel, isDriver=is_driver)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+
+    # 返回 JWT + 成功信息
+    token = create_access_token(identity={'id': user.UserID, 'isDriver': user.isDriver})
+    return jsonify({'message': '注册成功', 'token': token}), 201
+
 
 if __name__ == '__main__':
 	with app.app_context():

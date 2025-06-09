@@ -9,5 +9,11 @@ export default {
     })
   },
 
-  // ... 原有 API_DEMO_GET, API_DEMO_POST 可保留
+  API_REGISTER_POST(data = {}) {
+    return request({
+      url: '/register',
+      method: 'post',
+      data
+    })
+  },
 }

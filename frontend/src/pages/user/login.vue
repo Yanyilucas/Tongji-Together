@@ -90,7 +90,7 @@
   </nut-cell>
 <nut-row>
     <nut-col :span="24">
-       <nut-button block type="primary">注册账号</nut-button>
+       <nut-button block type="primary" @click="handleRegister">注册账号</nut-button>
     </nut-col>
   </nut-row>
 </nut-popup>
@@ -101,7 +101,7 @@
 <script setup>
 import { reactive, ref, toRefs } from 'vue'
 import { useRequest } from '@/api'
-const {API_LOGIN_POST} = useRequest()
+const {API_LOGIN_POST,API_REGISTER_POST} = useRequest()
 
 // 表单数据响应式变量
 const showBottom = ref(false)
@@ -118,7 +118,7 @@ const registerData = reactive({
 })
 
 
-
+// 处理登录逻辑
 async function handleLogin() {
   if (!loginData.tel || !loginData.password) {
     uni.showToast({ title: '请输入手机号和密码', icon: 'none' })
@@ -143,7 +143,41 @@ async function handleLogin() {
   uni.showToast({ title: message, icon: 'none' })
 }
 }
+//  处理注册逻辑
+async function handleRegister() {
+  const { name, tel, password, confirmPassword, isDriver } = registerData
 
+  // 基础校验
+  if (!name || !tel || !password || !confirmPassword) {
+    uni.showToast({ title: '请完整填写注册信息', icon: 'none' })
+    return
+  }
+  if (password !== confirmPassword) {
+    uni.showToast({ title: '两次密码不一致', icon: 'none' })
+    return
+  }
+
+  try {
+    const res = await API_REGISTER_POST({
+      name,
+      tel,
+      password,
+      confirmPassword,
+      isDriver
+    })
+    uni.showToast({ title: res.message || '注册成功', icon: 'success' })
+    // 保存 token，可选
+    console.log('注册获得 token:', res.token)
+    showBottom.value = false          // 关闭弹窗
+    loginData.tel = tel               // 回填登录表单方便直接登录
+  } catch (err) {
+    const msg =
+      err?.response?.data?.error ||
+      err?.message ||
+      '注册失败'
+    uni.showToast({ title: msg, icon: 'none' })
+  }
+}
 </script>
 
 <style scoped>
