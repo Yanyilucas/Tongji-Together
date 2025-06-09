@@ -98,14 +98,17 @@
 
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { reactive, ref, toRefs } from 'vue'
+import { useRequest } from '@/api'
+const {API_LOGIN_POST} = useRequest()
 
+// 表单数据响应式变量
+const showBottom = ref(false)
 const loginData = reactive({
   tel: '',
   password: ''
 })
-
 const registerData = reactive({
   name: '',
   tel: '',
@@ -115,38 +118,22 @@ const registerData = reactive({
 })
 
 
-const showBottom = ref(false)
+
 async function handleLogin() {
   if (!loginData.tel || !loginData.password) {
-    uni.showToast({ title: '请输入手机号和密码', icon: 'none' });
-    return;
+    uni.showToast({ title: '请输入手机号和密码', icon: 'none' })
+    return
   }
 
   try {
-    const response = await uni.request({
-      url: 'http://100.80.26.241:3001/login',  // 后端 Flask 服务地址
-      method: 'POST',
-      data: {
-        Tel: loginData.tel,
-        password: loginData.password
-      },
-      header: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const { statusCode, data } = response;
-    console.log('响应状态:', statusCode, '响应数据:', data);
-    // if (statusCode === 200) {
-    //   uni.showToast({ title: '登录成功', icon: 'success' });
-    //   console.log('token:', data.token);
-    //   // 你可以在这里保存 token，例如放到 localStorage、Pinia 等
-    // } else {
-    //   uni.showToast({ title: data.error || '登录失败', icon: 'none' });
-    // }
+    const res = await API_LOGIN_POST({
+      Tel: loginData.tel,
+      password: loginData.password
+    })
+    uni.showToast({ title: res.message || '登录成功', icon: 'success' })
+    console.log(res.token)
   } catch (err) {
-    console.error('请求失败:', err);
-    uni.showToast({ title: '请求失败', icon: 'none' });
+    uni.showToast({ title: err.error || '登录失败', icon: 'none' })
   }
 }
 

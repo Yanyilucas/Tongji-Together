@@ -74,7 +74,7 @@
   "locale": "zh-Hans",
   "h5": {
     "router": {
-      "base": "./"
+      "base": "http://100.80.26.241:3001"
     }
   }
 }
