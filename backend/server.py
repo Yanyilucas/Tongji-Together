@@ -75,6 +75,7 @@ class User(db.Model):
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
+    # __import__('ipdb').set_trace()  # 调试用
     if not data:
         return jsonify({'error': 'No input data provided'}), 400
 	# 提取并验证数据

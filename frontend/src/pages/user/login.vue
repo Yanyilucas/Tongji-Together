@@ -133,8 +133,15 @@ async function handleLogin() {
     uni.showToast({ title: res.message || '登录成功', icon: 'success' })
     console.log(res.token)
   } catch (err) {
-    uni.showToast({ title: err.error || '登录失败', icon: 'none' })
-  }
+  console.error('登录失败:', err)
+
+  const message =
+    err?.response?.data?.error ||        // 后端自定义返回
+    err?.message ||                      // Axios 错误消息
+    '登录失败'                           // 兜底
+
+  uni.showToast({ title: message, icon: 'none' })
+}
 }
 
 </script>
