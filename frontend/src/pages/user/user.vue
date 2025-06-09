@@ -1,12 +1,76 @@
 <template>
-  <nut-button
-    type="primary"
-    block
-    @click="toLogin"
-  >
-    登录/注册
-  </nut-button>
+  <nut-cell>
+    <image class="logo" src="/static/logo.png"></image>
+  </nut-cell>
+  <template v-if="userInfo">
+    
+    <!-- 可添加更多登录后内容 -->
 
+      
+    
+    <nut-grid :column-num="3" :border="false">
+    <nut-grid-item ></nut-grid-item>
+    <nut-grid-item >
+     <nut-avatar size="large" custom-color="#ffffff" bg-color="#FA2C19">
+        {{ userInfo.Name?.[0] || '' }}
+      </nut-avatar>
+    </nut-grid-item>
+    <nut-grid-item></nut-grid-item>
+    </nut-grid>
+
+    <nut-cell-group>
+      <nut-cell>
+        <nut-button type="primary" block @click="showBottom = true" v-if="!userInfo.isDriver"> 成为车主</nut-button>
+        <nut-button type="primary" block  v-else>注销车主</nut-button>
+      </nut-cell>
+      <nut-cell>
+         <nut-button type="primary" block @click="toLogout" plain> 退出登录 </nut-button>
+      </nut-cell>
+    </nut-cell-group>
+    <nut-popup position="bottom" round :custom-style="{ height: '80%' }" v-model:visible="showBottom">
+      <view style="padding: 20px">
+        <text style="font-size: 16px; font-weight: bold; display: block; margin-top: 10px;">
+          要成为顺风车车主，需要具备以下条件
+        </text>
+
+        <text style="font-size: 15px; font-weight: bold; display: block; margin-top: 10px;">一、符合基础驾驶条件</text>
+        <text style="display: block;">1. 年龄：18-70周岁；</text>
+        <text style="display: block;">2. 身体状况：健康；</text>
+        <text style="display: block;">3. 驾龄：无驾龄限制；</text>
+        <text style="display: block;">4. 驾驶证准驾车型：至少包含A1、A2、A3、B1、B2、C1、C2准驾车型的驾驶证。</text>
+
+        <text style="font-size: 15px; font-weight: bold; display: block; margin-top: 10px;">二、无不良记录</text>
+        <text style="display: block;">1. 无违法犯罪记录（含暴力犯罪记录、交通肇事犯罪记录、饮酒后驾驶记录、严重交通违法行为记录、吸毒记录）；</text>
+        <text style="display: block;">2. 无其他严重不良记录；</text>
+        <text style="display: block;">3. 未因涉嫌犯罪处于被调查、侦查等阶段或者被公安机关列入在逃人员名单的。</text>
+
+        <text style="font-size: 15px; font-weight: bold; display: block; margin-top: 10px;">三、拥有满足条件的车辆</text>
+        <text style="display: block;">1. 车辆条件：7座及以下车辆且车况良好；</text>
+        <text style="display: block;">2. 车辆所有人：自有车辆或者获得车主本人许可，驾驶车辆必须为认证通过的车辆；</text>
+        <text style="display: block;">3. 车龄（车辆注册日期）：15年以内；</text>
+        <text style="display: block;">4. 车辆需按期年检，且有车辆保险齐全。</text>
+      </view>
+      <nut-cell >
+    <nut-button type="primary" block @click="tobeDriver">
+      我已知悉,现在成为车主
+    </nut-button>
+    </nut-cell>
+    </nut-popup>
+
+   
+
+  </template>
+
+  <template v-else>
+    <view class="avatar-wrapper">
+      <nut-avatar size="large" bg-color="#FA2C19" custom-color="#ffffff">
+        <nut-icon name="my" size="50"></nut-icon>
+      </nut-avatar>
+    </view>
+    <nut-button type="primary" block @click="toLogin">
+      登录/注册
+    </nut-button>
+  </template>
 </template>
 
 <script setup>
@@ -15,20 +79,53 @@ import { useRequest } from '@/api'
 import { onShow } from '@dcloudio/uni-app'
 const { API_USERINFO_GET } = useRequest()
 
+const showBottom = ref(false) 
+const userInfo = ref(null)
 onShow(async () => {
-  try {
-    const res = await API_USERINFO_GET()
-    console.log('用户已登录，信息为:', res)
-    console.log('用户信息:', res)
-
-  } catch (err) {
-    console.warn('用户未登录或 token 无效')
+  if (userInfo.value) {
+    console.log('用户信息已存在，直接使用')
+  }else{
+    try {
+      const res = await API_USERINFO_GET()
+      console.log('用户已登录，信息为:', res)
+      userInfo.value = res
+    } catch (err) {
+      console.warn('用户未登录或 token 无效')
+      userInfo.value = null
+    }
   }
 })
-
 
 
 function toLogin() {
   uni.navigateTo({ url: '/pages/user/login' })
 }
+
+
+function toLogout() {
+  uni.clearStorageSync()
+  userInfo.value = null  
+}
+
+function tobeDriver() {
+  // TODO: 实现成为车主的逻辑
+}
+
 </script>
+<style scoped>
+.avatar-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20rpx 0;
+}
+
+.logo {
+    height: 150rpx;
+    width: 150rpx;
+    margin-top: 100rpx;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 50rpx;
+  }
+</style>

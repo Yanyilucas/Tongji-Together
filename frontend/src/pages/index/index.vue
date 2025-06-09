@@ -2,7 +2,6 @@
   <view class="content">
     <image class="logo" src="/static/logo.png"></image>
     欢迎使用同济同行
-
   </view>
   
 </template>
