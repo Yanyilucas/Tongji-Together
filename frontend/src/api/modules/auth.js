@@ -18,9 +18,23 @@ export default {
   },
 
   API_USERINFO_GET() {
-  return request({
-    url: '/userinfo',
-    method: 'get',
-  })
-}
+    return request({
+      url: '/userinfo',
+      method: 'get',
+    })
+  },
+
+  API_REGISTER_DRIVER_POST() {
+    return request({
+      url: '/register_driver',
+      method: 'post',
+    })
+  },
+
+  API_UNREGISTER_DRIVER_POST() {
+    return request({
+      url: '/unregister_driver',
+      method: 'post',
+    })
+  }
 }

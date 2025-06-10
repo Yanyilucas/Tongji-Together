@@ -40,6 +40,8 @@ VITE_APP_PUBLIC_BASE = 'http://xxx.xxx.xxx.xxx:3001'
 📁重要目录说明
 
 - `@/api` 存放与后端交互的各类`api`,如 `API_LOGIN_POST` , `API_REGISTER_POST`
+  - `service.js`自动拦截器
+
 - `@/layouts` 设置页面布局,如界面底部的导航栏 `tabBar`的设置,每个 `page`的展示都会按照 `layout`进行布局
 - `@/pages` 手机应用的各个页面,每个页面需要到 `pages.json` 中注册路由
 - `@/store` 应用的持久化信息,如登录后的身份凭证 `token`的持久化存储

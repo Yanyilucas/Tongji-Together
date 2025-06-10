@@ -159,6 +159,41 @@ def get_user_info():
         return jsonify({'error': '用户不存在'}), 404
     return jsonify(user.serialize()), 200
 
+
+@app.route('/register_driver', methods=['POST'])
+@jwt_required()
+def apply_driver():
+    identity = get_jwt_identity()
+    user_id = int(identity)
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': '用户不存在'}), 404
+
+    if user.isDriver:
+        return jsonify({'error': '您已经是车主'}), 400
+
+    user.isDriver = True
+    db.session.commit()
+    return jsonify({'message': '申请成功'}), 200
+
+@app.route('/unregister_driver', methods=['POST'])
+@jwt_required()
+def cancel_driver():
+    identity = get_jwt_identity()
+    user_id = int(identity)
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': '用户不存在'}), 404
+
+    if not user.isDriver:
+        return jsonify({'error': '您不是车主'}), 400
+
+    user.isDriver = False
+    db.session.commit()
+    return jsonify({'message': '注销车主成功'}), 200
+
 if __name__ == '__main__':
 	with app.app_context():
 		db.create_all()  # 确保所有表已创建

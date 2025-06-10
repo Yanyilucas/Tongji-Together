@@ -21,7 +21,7 @@
     <nut-cell-group>
       <nut-cell>
         <nut-button type="primary" block @click="showBottom = true" v-if="!userInfo.isDriver"> 成为车主</nut-button>
-        <nut-button type="primary" block  v-else>注销车主</nut-button>
+        <nut-button type="primary" block  v-else @click="handleUnRegisterDriver" plain>注销车主</nut-button>
       </nut-cell>
       <nut-cell>
          <nut-button type="primary" block @click="toLogout" plain> 退出登录 </nut-button>
@@ -51,7 +51,7 @@
         <text style="display: block;">4. 车辆需按期年检，且有车辆保险齐全。</text>
       </view>
       <nut-cell >
-    <nut-button type="primary" block @click="tobeDriver">
+    <nut-button type="primary" block @click="handleRegisterDriver">
       我已知悉,现在成为车主
     </nut-button>
     </nut-cell>
@@ -77,7 +77,7 @@
 import { ref } from 'vue'
 import { useRequest } from '@/api'
 import { onShow } from '@dcloudio/uni-app'
-const { API_USERINFO_GET } = useRequest()
+const { API_USERINFO_GET,API_REGISTER_DRIVER_POST,API_UNREGISTER_DRIVER_POST } = useRequest()
 
 const showBottom = ref(false) 
 const userInfo = ref(null)
@@ -107,8 +107,41 @@ function toLogout() {
   userInfo.value = null  
 }
 
-function tobeDriver() {
-  // TODO: 实现成为车主的逻辑
+
+async function handleRegisterDriver() {
+  try {
+    const res =await API_REGISTER_DRIVER_POST()
+    uni.showToast({ title:res?.message || '申请成功', icon: 'success' })
+
+    // 可选：刷新用户信息
+    showBottom.value = false
+    const resInfo = await API_USERINFO_GET()
+    userInfo.value = resInfo
+  } catch (err) {
+    console.error('申请失败:', err)
+    uni.showToast({ title: err?.message || '申请失败', icon: 'none' })
+  }
+}
+
+// 处理注销车主逻辑
+function handleUnRegisterDriver() {
+  uni.showModal({
+    title: '确认注销车主身份吗？',
+    content: '注销后将无法使用车主相关功能',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          // 调用注销车主接口
+          await API_UNREGISTER_DRIVER_POST()
+          uni.showToast({ title: '注销成功', icon: 'success' })
+          userInfo.value.isDriver = false  // 更新用户信息
+        } catch (err) {
+          console.error('注销失败:', err)
+          uni.showToast({ title: err?.message || '注销失败', icon: 'none' })
+        }
+      }
+    }
+  })
 }
 
 </script>
@@ -121,8 +154,8 @@ function tobeDriver() {
 }
 
 .logo {
-    height: 150rpx;
-    width: 150rpx;
+    height: 175rpx;
+    width: 175rpx;
     margin-top: 100rpx;
     margin-left: auto;
     margin-right: auto;
