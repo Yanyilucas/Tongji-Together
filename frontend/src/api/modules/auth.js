@@ -36,5 +36,18 @@ export default {
       url: '/unregister_driver',
       method: 'post',
     })
-  }
+  },
+
+  // 
+  API_TENCENT_MAP_SUGGESTION_GET(keyword){
+    return request({
+      url: 'https://apis.map.qq.com/ws/place/v1/suggestion',
+      method: 'get',
+      params:{
+        keyword,
+        region: '上海',
+        key: 'KKBBZ-UU7YL-4ZXP4-MMMJ5-BC4Q5-ZTFVO' // 在此处替换为您的密钥
+      }
+    })
+  },
 }

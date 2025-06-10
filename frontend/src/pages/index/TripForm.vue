@@ -6,10 +6,9 @@
       :to-address="postingForm.To"
       @location-change="handleLocationChange"
     />
-    
-    <!-- 表单 -->
+    <!-- 表单 : 出发地和目的地的搜索应交给地图模块-->
     <nut-form class="form-card">
-      <nut-form-item label="出发地" required>
+      <!-- <nut-form-item label="出发地" required>
         <nut-input 
           v-model="postingForm.From" 
           placeholder="请输入出发地" 
@@ -22,7 +21,7 @@
           placeholder="请输入目的地" 
           clearable
         />
-      </nut-form-item>
+      </nut-form-item> -->
       <nut-form-item label="出发时间" required>
         <picker 
           mode="date" 
@@ -86,17 +85,18 @@
   </view>
 </template>
 
-<script setup >
-import { reactive, ref } from 'vue'
+<script setup>
+import { ref, reactive } from 'vue'
 import TripMap from './TripMap.vue'
 
+// 表单数据
 const postingForm = reactive({
   From: '',
   To: '',
-  FromLat: 0,   // 出发地纬度
-  FromLng: 0,   // 出发地经度
-  ToLat: 0,     // 目的地纬度
-  ToLng: 0,     // 目的地经度
+  FromLat: 0,
+  FromLng: 0,
+  ToLat: 0,
+  ToLng: 0,
   DepartureTime: '',
   SeatsAvailable: 3,
   Fare: 50,
@@ -110,7 +110,7 @@ const departureTime = ref('')
 const departureDateDisplay = ref('')
 
 // 处理位置变化事件
-function handleLocationChange(data: any) {
+function handleLocationChange(data) {
   if (data.type === 'from') {
     postingForm.FromLat = data.latitude
     postingForm.FromLng = data.longitude
@@ -121,13 +121,13 @@ function handleLocationChange(data: any) {
 }
 
 // 处理日期选择
-function handleDateChange(e: any) {
+function handleDateChange(e) {
   departureDate.value = e.detail.value
   updateDepartureTime()
 }
 
 // 处理时间选择
-function handleTimeChange(e: any) {
+function handleTimeChange(e) {
   departureTime.value = e.detail.value
   updateDepartureTime()
 }
