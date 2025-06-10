@@ -14,7 +14,7 @@
       :name="item.name"
     />
   </nut-tabbar>
-
+  
 
 </template>
 

@@ -83,15 +83,35 @@ class DriverPosting(db.Model):
     
     FromLat = db.Column(db.Float, nullable=False)  # 出发地纬度
     FromLng = db.Column(db.Float, nullable=False)  # 出发地经度
-    ToLat = db.Column(db.Float, nullable=False)  # 目的地纬度
-    ToLng = db.Column(db.Float, nullable=False)  # 目的地经度
+    ToLat = db.Column(db.Float, nullable=False)    # 目的地纬度
+    ToLng = db.Column(db.Float, nullable=False)    # 目的地经度
+    CreatedAt = db.Column(db.DateTime, server_default=db.func.now())  # 创建时间
+    
+    PlateNumber = db.Column(db.String(20), nullable=False)  # 车牌号
     DepartureTime = db.Column(db.DateTime, nullable=False)  # 出发时间
     SeatsAvailable = db.Column(db.Integer, nullable=False)  # 可用座位数
-    CreatedAt = db.Column(db.DateTime    , server_default=db.func.now())  # 创建时间
     Fare = db.Column(db.Float, nullable=False)  # 费用
     Note = db.Column(db.String(255), nullable=True)  # 附加说明
     driver = db.relationship('User', backref='driver_postings')
 
+    
+    def serialize(self):
+        return {
+            'PostingID': self.PostingID,
+            'DrviverID': self.DrviverID,
+            'From': self.From,
+            'To': self.To,
+            'FromLat': self.FromLat,
+            'FromLng': self.FromLng,
+            'ToLat': self.ToLat,
+            'ToLng': self.ToLng,
+            'CreatedAt': self.CreatedAt.isoformat(),
+            'PlateNumber': self.PlateNumber,
+            'DepartureTime': self.DepartureTime.isoformat(),
+            'SeatsAvailable': self.SeatsAvailable,
+            'Fare': self.Fare,
+            'Note': self.Note
+        }
 class RideJoin(db.Model):
     __tablename__ = 'RideJoins'
     JoinID = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -101,6 +121,14 @@ class RideJoin(db.Model):
     user = db.relationship('User', backref='ride_joins')
     posting = db.relationship('DriverPosting', backref='ride_joins')
 
+    def serialize(self):
+        return {
+            'JoinID': self.JoinID,
+            'UserID': self.UserID,
+            'PostingID': self.PostingID,
+            'CreatedAt': self.CreatedAt.isoformat()
+        }
+        
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()

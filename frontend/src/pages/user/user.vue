@@ -1,9 +1,5 @@
 <template>
-  <!-- <nut-cell>
-    <image class="logo" src="/static/logo.png"></image>
-  </nut-cell> -->
   <template v-if="userInfo">
-
     <nut-grid :column-num="3" :border="false">
     <nut-grid-item ></nut-grid-item>
     <nut-grid-item >
