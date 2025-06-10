@@ -1,13 +1,9 @@
 <template>
-  <nut-cell>
+  <!-- <nut-cell>
     <image class="logo" src="/static/logo.png"></image>
-  </nut-cell>
+  </nut-cell> -->
   <template v-if="userInfo">
-    
-    <!-- 可添加更多登录后内容 -->
 
-      
-    
     <nut-grid :column-num="3" :border="false">
     <nut-grid-item ></nut-grid-item>
     <nut-grid-item >
@@ -17,6 +13,29 @@
     </nut-grid-item>
     <nut-grid-item></nut-grid-item>
     </nut-grid>
+
+    <!-- 日历预约内容,只显示最近的 出行 和 拼车 -->
+    <view style="text-align: center; font-size: 16px; font-weight: bold;">
+      {{ userInfo.Name || '用户' }}，欢迎回来！
+    </view>
+
+    <!-- 🔽 新增：最近的出行模块(仅车主) -->
+    
+    <view style="margin: 30rpx 20rpx 10rpx; font-size: 16px; font-weight: bold;" v-if="userInfo.isDriver">
+      最近的出行
+    </view>
+    <view style="padding: 0 20rpx;" v-if="userInfo.isDriver">
+      <nut-empty description="最近没有出行计划哦" />
+    </view>
+
+    <!-- 🔽 新增：最近的拼车模块 -->
+    <view style="margin: 30rpx 20rpx 10rpx; font-size: 16px; font-weight: bold;">
+      最近的拼车
+    </view>
+    <view style="padding: 0 20rpx;">
+      <nut-empty description="最近没有拼车计划哦" />
+    </view>
+
 
     <nut-cell-group>
       <nut-cell>

@@ -74,7 +74,32 @@ class User(db.Model):
     def __repr__(self):
         return f"<User(UserID={self.UserID}, Name={self.Name}, Tel={self.Tel}, isDriver={self.isDriver})>"
 
+class DriverPosting(db.Model):
+    __tablename__ = 'DriverPostings'
+    PostingID = db.Column(db.Integer     , primary_key=True, autoincrement=True)
+    DrviverID = db.Column(db.Integer     , db.ForeignKey('Users.UserID'), nullable=False)
+    From = db.Column(db.String(255)      , nullable=False)  # 出发地
+    To = db.Column(db.String(255)        , nullable=False)  # 目的地
+    
+    FromLat = db.Column(db.Float, nullable=False)  # 出发地纬度
+    FromLng = db.Column(db.Float, nullable=False)  # 出发地经度
+    ToLat = db.Column(db.Float, nullable=False)  # 目的地纬度
+    ToLng = db.Column(db.Float, nullable=False)  # 目的地经度
+    DepartureTime = db.Column(db.DateTime, nullable=False)  # 出发时间
+    SeatsAvailable = db.Column(db.Integer, nullable=False)  # 可用座位数
+    CreatedAt = db.Column(db.DateTime    , server_default=db.func.now())  # 创建时间
+    Fare = db.Column(db.Float, nullable=False)  # 费用
+    Note = db.Column(db.String(255), nullable=True)  # 附加说明
+    driver = db.relationship('User', backref='driver_postings')
 
+class RideJoin(db.Model):
+    __tablename__ = 'RideJoins'
+    JoinID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    UserID = db.Column(db.Integer, db.ForeignKey('Users.UserID'), nullable=False)
+    PostingID = db.Column(db.Integer, db.ForeignKey('DriverPostings.PostingID'), nullable=False)
+    CreatedAt = db.Column(db.DateTime, server_default=db.func.now())  # 创建时间
+    user = db.relationship('User', backref='ride_joins')
+    posting = db.relationship('DriverPosting', backref='ride_joins')
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -96,13 +121,6 @@ def login():
         return jsonify({'error': '密码错误'}), 401
 	# 生成 JWT token
     token = create_access_token(identity=str(existing_user.UserID))
-    # try:
-    #     # 只校验签名，允许过期，忽略类型
-    #     decoded = decode_token(token, allow_expired=True)
-    #     print("✅ 刚生成的 token 成功解码：", decoded)
-    # except jwt_exc.JWTDecodeError as e:
-    #     # 如果这里失败，说明生成的 token 就有问题
-    #     print("❌ 生成后立即 decode 失败：", e)
     
     return jsonify({'message': '登录成功', 'token': token}), 200
 
@@ -141,12 +159,6 @@ def register():
     # 返回 JWT + 成功信息
     return jsonify({'message': '注册成功'}), 201
 
-# @app.before_request
-# def log_headers():
-#     print("== headers ==")
-#     print(dict(request.headers))
-
-
 @app.route('/userinfo', methods=['GET'])
 @jwt_required()
 def get_user_info():
@@ -158,7 +170,6 @@ def get_user_info():
     if not user:
         return jsonify({'error': '用户不存在'}), 404
     return jsonify(user.serialize()), 200
-
 
 @app.route('/register_driver', methods=['POST'])
 @jwt_required()
@@ -193,6 +204,8 @@ def cancel_driver():
     user.isDriver = False
     db.session.commit()
     return jsonify({'message': '注销车主成功'}), 200
+
+
 
 if __name__ == '__main__':
 	with app.app_context():
