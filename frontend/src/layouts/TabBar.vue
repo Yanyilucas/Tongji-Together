@@ -26,7 +26,6 @@ const activeName = ref('home')
 
 const tabs = [
   { name: 'home', title: '首页', icon: 'home', path: '/pages/index/index' },
-  { name: 'find', title: '发现', icon: 'find', path: '/pages/interaction/interaction' },
   { name: 'my', title: '我的', icon: 'my', path: '/pages/user/user' }
 ]
 

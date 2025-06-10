@@ -1,6 +1,0 @@
-<template>
-  <text> 发现界面</text>
-</template>
-<script setup>
-
-</script>

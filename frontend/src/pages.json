@@ -16,14 +16,6 @@
       }
     },
     {
-      "path": "pages/interaction/interaction",
-      "type": "page",
-      "layout": "defaultbar",
-      "style": {
-        "navigationBarTitleText": "发现"
-      }
-    },
-    {
       "path": "pages/user/user",
       "type": "page",
       "layout": "defaultbar",
@@ -46,10 +38,6 @@
     {
       "pagePath": "pages/index/index",
       "text": "首页"
-    },
-    {
-      "pagePath": "pages/interaction/interaction",
-      "text": "发现"
     },
      {
       "pagePath": "pages/user/user",
