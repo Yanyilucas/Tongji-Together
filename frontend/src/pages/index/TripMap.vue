@@ -78,7 +78,7 @@
            </template>
         </nut-button>
         <nut-button 
-          type="default" 
+          type="info" 
           size="small" 
           plain
           @click="zoomOut"
@@ -88,7 +88,7 @@
         </template>
         </nut-button>
         <nut-button 
-          type="info" 
+          type="default" 
           size="small" 
           plain
           @click="clearMarkers"

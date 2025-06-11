@@ -70,7 +70,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed} from 'vue'
 
 // 表单数据 postingFormAddrset 初始化为响应式对象
 const postingFormAddrset = reactive({
