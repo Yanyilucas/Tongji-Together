@@ -73,7 +73,7 @@ export default {
     // 车主发布行程
     API_DRIVERPOSTING_POST(data = {}) {
     return request({
-      url: '/driver_posting',
+      url: '/post_driver_posting',
       method: 'post',
       data:{
         From: data.From, // 出发地

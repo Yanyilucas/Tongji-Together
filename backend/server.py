@@ -2,6 +2,7 @@ import os
 import uuid
 from datetime import datetime
 from datetime import timedelta
+import math
 
 
 
@@ -234,7 +235,7 @@ def cancel_driver():
     return jsonify({'message': '注销车主成功'}), 200
 
 
-@app.route('/driver_posting', methods=['POST'])
+@app.route('/post_driver_posting', methods=['POST'])
 @jwt_required()
 def create_driver_posting():
     identity = get_jwt_identity()
@@ -302,6 +303,56 @@ def create_driver_posting():
 
     return jsonify({'message': '发布成功', 'posting': posting.serialize()}), 201
 
+# --------------------------------  行程列表接口  --------------------------------
+def _haversine(lat1, lon1, lat2, lon2):
+    """
+    Returns great‑circle distance in kilometres between two points on the Earth.
+    """
+    R = 6371.0
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2)**2
+    return 2 * R * math.asin(math.sqrt(a))
+
+
+@app.route('/get_driver_postings', methods=['GET'])
+def list_driver_postings():
+    """
+    列出未来行程，并支持根据乘客出发/目的地坐标进行匹配度排序。
+    
+    Query Params
+    -----------
+    from_lat, from_lng, to_lat, to_lng : float  可选，乘客选择的起终点坐标
+    limit                             : int    可选，返回条目数（默认 10）
+    """
+    limit      = request.args.get('limit', 10, type=int)
+    now        = db.func.now()
+
+    # 仅取出发时间晚于当前时刻的行程
+    postings   = (DriverPosting.query
+                               .filter(DriverPosting.DepartureTime > now)
+                               .all())
+
+    # 若乘客坐标齐全，则按匹配度排序
+    def _coord(name):
+        try:
+            return float(request.args.get(name))
+        except (TypeError, ValueError):
+            return None
+
+    flt, flng = _coord('from_lat'), _coord('from_lng')
+    tlt, tlng = _coord('to_lat'),   _coord('to_lng')
+
+    if None not in (flt, flng, tlt, tlng):
+        postings.sort(
+            key=lambda p: _haversine(flt, flng, p.FromLat, p.FromLng) +
+                          _haversine(tlt, tlng, p.ToLat,   p.ToLng)
+        )
+    else:
+        postings.sort(key=lambda p: p.DepartureTime)   # 默认按时间
+
+    return jsonify([p.serialize() for p in postings[:limit]]), 200
 
 if __name__ == '__main__':
 	with app.app_context():

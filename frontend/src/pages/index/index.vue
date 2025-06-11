@@ -5,7 +5,7 @@
 <nut-tabs v-model="state.tab1value">
   <nut-tab-pane title="🚶 人找车">
     <!-- 设置1️⃣-->
-    
+    <TripDisplay />
   </nut-tab-pane>
   <nut-tab-pane title="🚗 车找人">
     <!-- 发布行程 -->
@@ -19,7 +19,7 @@
 <script setup>
 import { ref,reactive } from 'vue'
 import TripForm from './TripForm.vue'
-
+import TripDisplay from './TripDisplay.vue'
 const state = reactive({
   tab1value: '0',
 })

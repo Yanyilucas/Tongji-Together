@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@climblee/uv-ui':
+        specifier: ^1.1.20
+        version: 1.1.20
       '@dcloudio/uni-app':
         specifier: 3.0.0-4060420250429001
         version: 3.0.0-4060420250429001(@dcloudio/types@3.4.15)(postcss@8.5.3)(rollup@4.40.1)(vue@3.5.13(typescript@5.8.3))
@@ -811,6 +814,9 @@ packages:
 
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+
+  '@climblee/uv-ui@1.1.20':
+    resolution: {integrity: sha512-jkyesHJsPJkF4Nap9ZmG1/ibKlxXA5M8+ntqKXwwloIsYSYL5SOKb0gyPj17aBOU1PkJpmeiZ8PwnTolhK2/HA==}
 
   '@commitlint/cli@19.8.0':
     resolution: {integrity: sha512-t/fCrLVu+Ru01h0DtlgHZXbHV2Y8gKocTR5elDOqIRUzQd0/6hpt2VIWOj9b3NDo7y4/gfxeR2zRtXq/qO6iUg==}
@@ -6664,6 +6670,8 @@ snapshots:
       '@babel/helper-validator-identifier': 7.27.1
 
   '@bcoe/v8-coverage@0.2.3': {}
+
+  '@climblee/uv-ui@1.1.20': {}
 
   '@commitlint/cli@19.8.0(@types/node@20.17.40)(typescript@5.8.3)':
     dependencies:
