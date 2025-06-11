@@ -29,7 +29,7 @@ pnpm dev:mp-weixin
 
 
 
-运行前需要检查**服务端**的 `IP`地址(使用 `ifconfig /ipconfig` 查看),并修改文件 `.env` `.env.development` `.env.production`中的这一行.
+运行前需要检查**服务端**的 `IP`地址(使用 `ifconfig /ipconfig` 查看),并修改文件 `.env` `.env.development` 中的这一行.
 
 ```
 VITE_APP_PUBLIC_BASE = 'http://xxx.xxx.xxx.xxx:3001'
@@ -49,6 +49,16 @@ VITE_APP_PUBLIC_BASE = 'http://xxx.xxx.xxx.xxx:3001'
 
 
 
+🔑 **API**
+
+使用腾讯地图的 API,并在 `.env` `.env.development` 进行管理,可以替换为你自己 `key`
+
+```shell
+ITE_TENCENT_MAP_API_KEY = xxxxx
+```
+
+
+
 ## 💻后端
 
 使用 `uv` 进行环境管理,并已创建了虚拟环境和依赖
@@ -65,4 +75,4 @@ uv run server.py
  python server.py
 ```
 
-后端框架 `Flask`数据库使用 `SQLite`并结合 `SQLAlchemy`实现数据表映射
+后端框架 `Flask`数据库使用 `SQLite`并结合 `SQLAlchemy`实现 `ORM` 数据表映射

@@ -5,10 +5,6 @@
       <!-- 区块标题 -->
       <view class="block-header">
         <text class="block-title">行程地图</text>
-        <view class="block-actions" @click="centerToShanghai">
-          <nut-icon name="location" size="16" color="#1989fa"></nut-icon>
-          <text class="action-text">回到中心</text>
-        </view>
       </view>
       
       <!-- 位置输入区域 -->
@@ -61,8 +57,9 @@
         <map
           :latitude="mapCenter.latitude"
           :longitude="mapCenter.longitude"
-          :markers="markers"
+          :markers="activeMarkers"
           :scale="zoomLevel"
+          :polyline="polyline"
           class="full-map"
           @markertap="handleMarkerTap"
         />
@@ -76,7 +73,9 @@
           plain
           @click="zoomIn"
         >
+           <template #icon>
           <nut-icon name="plus" size="14"></nut-icon>
+           </template>
         </nut-button>
         <nut-button 
           type="default" 
@@ -84,7 +83,9 @@
           plain
           @click="zoomOut"
         >
+        <template #icon>
           <nut-icon name="minus" size="14"></nut-icon>
+        </template>
         </nut-button>
         <nut-button 
           type="info" 
@@ -92,7 +93,29 @@
           plain
           @click="clearMarkers"
         >
+          <template #icon>
           <nut-icon name="del" size="14"></nut-icon>
+          </template>
+        </nut-button>
+      </view>
+      
+      <!-- 调试信息 -->
+      <view class="debug-info" v-if="showDebugInfo">
+        <text>路径点数量: {{ polyline.length > 0 ? polyline[0].points.length : 0 }}</text>
+        <text v-if="polyline.length > 0">起点: {{ polyline[0].points[0] ? `${polyline[0].points[0].latitude.toFixed(6)}, ${polyline[0].points[0].longitude.toFixed(6)}` : '无' }}</text>
+        <text v-if="polyline.length > 0">终点: {{ polyline[0].points[polyline[0].points.length - 1] ? `${polyline[0].points[polyline[0].points.length - 1].latitude.toFixed(6)}, ${polyline[0].points[polyline[0].points.length - 1].longitude.toFixed(6)}` : '无' }}</text>
+        <text>地图中心: {{ mapCenter.latitude.toFixed(6) }}, {{ mapCenter.longitude.toFixed(6) }}</text>
+        <text>缩放级别: {{ zoomLevel }}</text>
+      </view>
+      
+      <!-- 调试按钮 -->
+      <view class="debug-toggle">
+        <nut-button 
+          type="default" 
+          size="small" 
+          @click="showDebugInfo = !showDebugInfo"
+        >
+          {{ showDebugInfo ? '隐藏调试信息' : '显示调试信息' }}
         </nut-button>
       </view>
     </view>
@@ -100,13 +123,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-const { API_TENCENT_MAP_SUGGESTION_GET } = useRequest()
-// 地图相关逻辑
-const mapCenter = ref({ latitude: 31.2304, longitude: 121.4737 }) // 上海市中心
-const markers = ref([])
-const zoomLevel = ref(13) // 默认缩放级别
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 
+// 地图相关逻辑
+const mapCenter = ref({ latitude: 31.2304, longitude: 121.4737 })
+const zoomLevel = ref(13)
+const polyline = ref([])
+const routePoints = ref([])
+const showDebugInfo = ref(false) // 调试信息开关
+const {API_TENCENT_MAP_SUGGESTION_GET, API_TENCENT_MAP_ROUTE_GET} = useRequest()
 // 表单数据
 const postingForm = reactive({
   From: '',
@@ -115,6 +140,18 @@ const postingForm = reactive({
   FromLng: 0,
   ToLat: 0,
   ToLng: 0,
+})
+
+// 使用单独的fromMark和toMark替代markers列表
+const fromMark = ref(null)
+const toMark = ref(null)
+
+// 计算属性：合并两个标记为数组
+const activeMarkers = computed(() => {
+  const markers = []
+  if (fromMark.value) markers.push(fromMark.value)
+  if (toMark.value) markers.push(toMark.value)
+  return markers
 })
 
 // 地点建议功能
@@ -128,7 +165,7 @@ const suggestionsVisible = reactive({
   To: false
 })
 
-const activeInput = ref('') // 当前活跃的输入框类型 ('From' 或 'To')
+const activeInput = ref('')
 
 // 计算当前显示的建议列表
 const activeSuggestions = computed(() => {
@@ -146,33 +183,31 @@ function zoomOut() {
   if (zoomLevel.value > 3) zoomLevel.value -= 1
 }
 
-function centerToShanghai() {
-  mapCenter.value = { latitude: 31.2304, longitude: 121.4737 }
-  zoomLevel.value = 13
-}
-
+// 清空所有标记和路径
 function clearMarkers() {
-  markers.value = []
+  fromMark.value = null
+  toMark.value = null
   postingForm.From = ''
   postingForm.To = ''
   postingForm.FromLat = 0
   postingForm.FromLng = 0
   postingForm.ToLat = 0
   postingForm.ToLng = 0
+  polyline.value = []
+  routePoints.value = []
 }
 
-// 添加标记点
-function addMarker(location, label) {
+// 创建标记对象
+function createMarker(location, label) {
   const isFrom = label === 'From'
   const markerColor = isFrom ? '#1989fa' : '#ff4d4f'
   
-  const marker = {
+  return {
     id: isFrom ? 1 : 2,
     latitude: location.lat,
     longitude: location.lng,
     title: `${isFrom ? '出发地' : '目的地'}: ${location.title || location.address}`,
-    // 使用默认标记并通过color属性设置颜色
-    color: isFrom ? '#1989FA' : '#FF4D4F', // 蓝色表示出发地，红色表示目的地
+    color: markerColor,
     width: 24,
     height: 24,
     callout: {
@@ -184,60 +219,244 @@ function addMarker(location, label) {
       display: 'BYCLICK'
     }
   }
-  
-  // 更新或添加标记点
-  const existingIndex = markers.value.findIndex(m => m.id === marker.id)
-  if (existingIndex >= 0) {
-    markers.value[existingIndex] = marker
-  } else {
-    markers.value.push(marker)
+}
+
+// 更新地图中心点
+function updateMapCenter() {
+  if (fromMark.value && toMark.value) {
+    // 两地中心点
+    const centerLat = (fromMark.value.latitude + toMark.value.latitude) / 2
+    const centerLng = (fromMark.value.longitude + toMark.value.longitude) / 2
+    mapCenter.value = { latitude: centerLat, longitude: centerLng }
+    
+    // 自动调整缩放级别
+    const latDiff = Math.abs(fromMark.value.latitude - toMark.value.latitude)
+    const lngDiff = Math.abs(fromMark.value.longitude - toMark.value.longitude)
+    const maxDiff = Math.max(latDiff, lngDiff)
+    
+    if (maxDiff < 0.01) zoomLevel.value = 15
+    else if (maxDiff < 0.05) zoomLevel.value = 13
+    else if (maxDiff < 0.1) zoomLevel.value = 11
+    else zoomLevel.value = 10
+  } else if (fromMark.value) {
+    mapCenter.value = { 
+      latitude: fromMark.value.latitude, 
+      longitude: fromMark.value.longitude 
+    }
+    zoomLevel.value = 15
+  } else if (toMark.value) {
+    mapCenter.value = { 
+      latitude: toMark.value.latitude, 
+      longitude: toMark.value.longitude 
+    }
+    zoomLevel.value = 15
   }
+}
+
+// 添加标记点
+function addMarker(location, label) {
+  const marker = createMarker(location, label)
   
-  // 更新表单中的位置信息
-  if (isFrom) {
+  // 设置对应的标记
+  if (label === 'From') {
+    fromMark.value = marker
     postingForm.FromLat = location.lat
     postingForm.FromLng = location.lng
     postingForm.From = location.title || location.address
   } else {
+    toMark.value = marker
     postingForm.ToLat = location.lat
     postingForm.ToLng = location.lng
     postingForm.To = location.title || location.address
   }
   
-  // 如果是第一个点，将地图中心移动到此位置
-  if (markers.value.length === 1) {
-    mapCenter.value = { latitude: location.lat, longitude: location.lng }
+  updateMapCenter()
+}
+
+
+// 路径规划API调用 - 修复参数错误版本
+// 路径规划API调用 - 基于实际数据结构的修复版本
+async function planRoute() {
+  if (!fromMark.value || !toMark.value) return
+  
+  console.log('开始路径规划...')
+  console.log('起点坐标:', fromMark.value.latitude, fromMark.value.longitude)
+  console.log('终点坐标:', toMark.value.latitude, toMark.value.longitude)
+  
+  try {
+    const from = `${fromMark.value.latitude},${fromMark.value.longitude}`
+    const to = `${toMark.value.latitude},${toMark.value.longitude}`
+    
+    // 确保坐标精度（最多6位小数）
+    const formatCoord = coord => {
+      const [lat, lng] = coord.split(',').map(parseFloat)
+      return `${lat.toFixed(6)},${lng.toFixed(6)}`
+    }
+
+    const res = await API_TENCENT_MAP_ROUTE_GET(
+      formatCoord(from), 
+      formatCoord(to)
+    )
+    
+    console.log('路径规划API响应:', res)
+
+    if (res.status === 0 && res.result?.routes?.[0]?.polyline?.length > 0) {
+      const compressed = res.result.routes[0].polyline
+      const points = []
+      
+      // 打印原始压缩数据前10项
+      console.log('压缩polyline数组（前10个）:', compressed.slice(0, 10))
+      
+      // 第一个点是绝对坐标
+      let lat = compressed[0]
+      let lng = compressed[1]
+      
+      // 验证起点坐标是否合理
+      if (!isValidCoordinate(lat, lng)) {
+        console.warn('起点坐标异常，尝试校正')
+        lat = fromMark.value.latitude
+        lng = fromMark.value.longitude
+      }
+      
+      points.push({ latitude: lat, longitude: lng })
+
+      // 从第3个数开始解码（增量编码）
+      for (let i = 2; i < compressed.length; i += 2) {
+        // 增量单位是万分度，除以10000转换为实际度数
+        const deltaLat = compressed[i] / 1000000
+        const deltaLng = compressed[i + 1] / 1000000
+        
+        lat += deltaLat
+        lng += deltaLng
+        
+        points.push({ latitude: lat, longitude: lng })
+      }
+
+      console.log('路径点数量:', points.length)
+      console.log('路径起点:', points[0])
+      console.log('路径终点:', points[points.length - 1])
+      
+      // 验证终点坐标与预期相符
+      const expectedLat = toMark.value.latitude
+      const expectedLng = toMark.value.longitude
+      const actualLat = points[points.length - 1].latitude
+      const actualLng = points[points.length - 1].longitude
+      
+      if (Math.abs(actualLat - expectedLat) > 0.01 || 
+          Math.abs(actualLng - expectedLng) > 0.01) {
+        console.warn('终点坐标校正：预期 vs 实际', 
+          [expectedLat, expectedLng], [actualLat, actualLng])
+        points[points.length - 1] = {
+          latitude: expectedLat,
+          longitude: expectedLng
+        }
+      }
+      
+      // 设置路径线（确保所有点在有效范围内）
+      polyline.value = [{
+        points: points.map(p => ({
+          latitude: clampCoordinate(p.latitude, 'lat'),
+          longitude: clampCoordinate(p.longitude, 'lng')
+        })),
+        color: '#1989fa',
+        width: 6,
+        arrowLine: true,
+        borderColor: '#fff',
+        borderWidth: 2
+      }]
+      
+      // 更新地图视图以包含整个路径
+      updateMapCenterForRoute(points)
+    } else {
+      console.error('API路径规划失败:', res.message || '未返回有效路径')
+      uni.showToast({
+        title: `路径规划失败: ${res.message || '未知错误'}`,
+        icon: 'none'
+      })
+    }
+  } catch (err) {
+    console.error('路径规划调用失败:', err)
+    uni.showToast({
+      title: '路径规划服务出错，请稍后再试',
+      icon: 'none'
+    })
   }
 }
 
-// 真实API实现示例 (替换模拟搜索功能)
+// 辅助函数：验证坐标有效性
+function isValidCoordinate(lat, lng) {
+  return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
+}
+
+// 辅助函数：坐标钳制到合法范围
+function clampCoordinate(value, type) {
+  if (type === 'lat') {
+    return Math.max(-90, Math.min(90, value))
+  }
+  return Math.max(-180, Math.min(180, value))
+}
+// 为路径更新地图中心点
+function updateMapCenterForRoute(points) {
+  if (!points || points.length === 0) return
+  
+  // 计算路径边界
+  let minLat = points[0].latitude
+  let maxLat = points[0].latitude
+  let minLng = points[0].longitude
+  let maxLng = points[0].longitude
+  
+  points.forEach(point => {
+    if (point.latitude < minLat) minLat = point.latitude
+    if (point.latitude > maxLat) maxLat = point.latitude
+    if (point.longitude < minLng) minLng = point.longitude
+    if (point.longitude > maxLng) maxLng = point.longitude
+  })
+  
+  // 计算中心点
+  const centerLat = (minLat + maxLat) / 2
+  const centerLng = (minLng + maxLng) / 2
+  
+  mapCenter.value = {
+    latitude: centerLat,
+    longitude: centerLng
+  }
+  
+  // 自动调整缩放级别（根据路径跨度）
+  const latDiff = maxLat - minLat
+  const lngDiff = maxLng - minLng
+  const maxDiff = Math.max(latDiff, lngDiff)
+  
+  if (maxDiff < 0.005) zoomLevel.value = 16
+  else if (maxDiff < 0.01) zoomLevel.value = 14
+  else if (maxDiff < 0.05) zoomLevel.value = 12
+  else if (maxDiff < 0.1) zoomLevel.value = 10
+  else zoomLevel.value = 8
+}
+
+// 监听起点终点变化
+watch(
+  () => [fromMark.value, toMark.value], 
+  () => {
+    if (fromMark.value && toMark.value) {
+      planRoute()
+    } else {
+      polyline.value = []
+    }
+  },
+  { deep: true }
+)
+
+// 地点搜索函数
 async function searchLocations(type) {
-    
-    console.log('搜索位置:')
   const keyword = postingForm[type]
   if (!keyword) {
     suggestions[type] = []
     return
   }
   
-   try {
-    // 1. 添加详细的日志记录
-    console.log('搜索关键词:', keyword)
-    console.log('发送API请求...')
-    
-    // 2. 调用API
+  try {
     const res = await API_TENCENT_MAP_SUGGESTION_GET(keyword)
     
-    // 3. 添加响应检查
-    if (!res) {
-      throw new Error('API调用成功但未返回响应')
-    }
-    
-    // 4. 详细的响应日志
-    console.log('API响应:', res)
-    
-    // 5. 修复响应处理
-    // 注意：腾讯地图API返回的结构是 { status, data }
     if (res.status === 0 && res.data) {
       suggestions[type] = res.data.map(item => ({
         title: item.title,
@@ -247,18 +466,13 @@ async function searchLocations(type) {
         type
       }))
     } else {
-      // 处理API返回的错误
       throw new Error(`API错误: ${res.message || '未知错误'}`)
     }
   } catch (err) {
-    // 6. 更详细的错误处理
-    console.error('位置搜索失败:', {
-      error: err,
-      requestUrl: 'https://apis.map.qq.com/ws/place/v1/suggestion',
-      params: { keyword, region: '上海' }
-    })
-    }
+    console.error('位置搜索失败:', err)
+  }
 }
+
 // 显示建议列表
 function showSuggestions(type) {
   suggestionsVisible[type] = true
@@ -270,7 +484,6 @@ function showSuggestions(type) {
 
 // 隐藏建议列表
 function hideSuggestions(type) {
-  // 延迟隐藏，让用户有时间点击建议项
   setTimeout(() => {
     suggestionsVisible[type] = false
   }, 200)
@@ -278,26 +491,20 @@ function hideSuggestions(type) {
 
 // 选择建议项
 function selectSuggestion(item) {
-  // 隐藏建议列表
   suggestionsVisible[item.type] = false
   activeInput.value = ''
   
-  // 添加标记点
   addMarker({
     lat: item.lat,
     lng: item.lng,
     title: item.title,
     address: item.address
   }, item.type)
-  
-  // 将地图移动到标记点位置
-  mapCenter.value = { latitude: item.lat, longitude: item.lng }
-  zoomLevel.value = 15
 }
 
 // 处理标记点点击
 function handleMarkerTap(e) {
-  const marker = markers.value.find(m => m.id === e.detail.markerId)
+  const marker = activeMarkers.value.find(m => m.id === e.detail.markerId)
   if (marker) {
     uni.showToast({
       title: marker.title,
@@ -308,8 +515,9 @@ function handleMarkerTap(e) {
 
 // 组件挂载时初始化地图
 onMounted(() => {
-  // 初始设置：空白地图（仅上海市中心）
-  markers.value = []
+  // 初始设置空白地图
+  fromMark.value = null
+  toMark.value = null
 })
 </script>
 
@@ -362,27 +570,6 @@ onMounted(() => {
   height: 16px;
   background: #1989fa;
   border-radius: 2px;
-}
-
-.block-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: #f0f8ff;
-  border-radius: 20px;
-  font-size: 13px;
-  color: #1989fa;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.block-actions:active {
-  background: #e1f0ff;
-}
-
-.action-text {
-  margin-top: 1px;
 }
 
 /* 位置输入区 */
@@ -482,6 +669,25 @@ onMounted(() => {
   padding: 12px;
   background: rgba(255, 255, 255, 0.9);
   border-top: 1px solid #f5f5f5;
+}
+
+/* 调试信息 */
+.debug-info {
+  padding: 12px 16px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e8e8e8;
+  font-size: 12px;
+  color: #666;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.debug-toggle {
+  padding: 8px 16px;
+  border-top: 1px solid #f5f5f5;
+  display: flex;
+  justify-content: center;
 }
 
 /* 响应式调整 */

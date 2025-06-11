@@ -46,8 +46,23 @@ export default {
       params:{
         keyword,
         region: '上海',
-        key: 'KKBBZ-UU7YL-4ZXP4-MMMJ5-BC4Q5-ZTFVO' // 在此处替换为您的密钥
+        key: import.meta.env.VITE_TENCENT_MAP_API_KEY, // 腾讯地图API密钥
       }
     })
   },
+
+  API_TENCENT_MAP_ROUTE_GET(from, to) {
+    return request({
+      url: 'https://apis.map.qq.com/ws/direction/v1/driving',
+      method: 'get',
+      params: {
+        from,
+        to,
+        region: '上海',
+        key: import.meta.env.VITE_TENCENT_MAP_API_KEY, // 腾讯地图API密钥
+      }
+    })
+  },
+
+
 }
