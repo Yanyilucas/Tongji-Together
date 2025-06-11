@@ -234,6 +234,74 @@ def cancel_driver():
     return jsonify({'message': '注销车主成功'}), 200
 
 
+@app.route('/driver_posting', methods=['POST'])
+@jwt_required()
+def create_driver_posting():
+    identity = get_jwt_identity()
+    user_id = int(identity)
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': '用户不存在'}), 404
+
+    if not user.isDriver:
+        return jsonify({'error': '您不是车主'}), 400
+    
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No input data provided'}), 400
+
+    # ----------------- 提取并验证数据 -----------------
+    required_fields = [
+        'From', 'To',
+        'FromLat', 'FromLng',
+        'ToLat', 'ToLng',
+        'DepartureTime',
+        'SeatsAvailable',
+        'Fare',
+        'PlateNumber'
+    ]
+    missing = [f for f in required_fields if f not in data or data[f] in (None, '')]
+    if missing:
+        return jsonify({'error': f"缺少必要字段: {', '.join(missing)}"}), 400
+
+    # 字段预处理 & 类型转换
+    try:
+        posting_kwargs = {
+            'DrviverID': user_id,
+            'From':        str(data['From']).strip(),
+            'To':          str(data['To']).strip(),
+            'FromLat':     float(data['FromLat']),
+            'FromLng':     float(data['FromLng']),
+            'ToLat':       float(data['ToLat']),
+            'ToLng':       float(data['ToLng']),
+            'PlateNumber': str(data['PlateNumber']).strip(),
+            'SeatsAvailable': int(data['SeatsAvailable']),
+            'Fare':          float(data['Fare']),
+            'Note':          str(data.get('Note') or '').strip()
+        }
+    except (ValueError, TypeError):
+        return jsonify({'error': '坐标、座位数或费用格式不正确'}), 400
+
+    # 解析出发时间 (ISO8601 或 “YYYY-MM-DD HH:MM”)
+    departure_raw = str(data['DepartureTime']).strip()
+    try:
+        if 'T' in departure_raw:
+            # ISO 格式
+            departure_dt = datetime.fromisoformat(departure_raw)
+        else:
+            departure_dt = datetime.strptime(departure_raw, '%Y-%m-%d %H:%M')
+    except ValueError:
+        return jsonify({'error': 'DepartureTime 时间格式应为 ISO8601 或 YYYY-MM-DD HH:MM'}), 400
+    posting_kwargs['DepartureTime'] = departure_dt
+
+    # 创建并保存
+    posting = DriverPosting(**posting_kwargs)
+    db.session.add(posting)
+    db.session.commit()
+
+    return jsonify({'message': '发布成功', 'posting': posting.serialize()}), 201
+
 
 if __name__ == '__main__':
 	with app.app_context():

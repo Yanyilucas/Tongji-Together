@@ -73,9 +73,21 @@ export default {
     // 车主发布行程
     API_DRIVERPOSTING_POST(data = {}) {
     return request({
-      url: '/driverposting',
+      url: '/driver_posting',
       method: 'post',
-      data
+      data:{
+        From: data.From, // 出发地
+        To: data.To, // 目的地
+        FromLat: data.FromLat, // 出发地纬度
+        FromLng: data.FromLng, // 出发地经度
+        ToLat: data.ToLat, // 目的地纬度
+        ToLng: data.ToLng, // 目的地经度
+        DepartureTime: data.DepartureTime, // 出发时间
+        SeatsAvailable: data.SeatsAvailable, // 可用座位数
+        Fare: data.Fare, // 费用
+        PlateNumber: data.PlateNumber, // 车牌号
+        Note: data.Note, // 备注
+      }
     })
   },
   

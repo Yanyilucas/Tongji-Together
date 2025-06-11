@@ -72,7 +72,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import TripMap from './TripMap.vue'
-
+const  { API_DRIVERPOSTING_POST} = useRequest()
 // 表单数据
 const postingForm = reactive({
   From: '', 
@@ -144,23 +144,29 @@ function submitForm() {
   for (const key in postingForm) {
   console.log(`${key}:`, postingForm[key])
 }
+  try {
+    // 调用API提交数据
+    API_DRIVERPOSTING_POST(postingForm)
+    uni.showToast({ title: '行程发布成功', icon: 'success' })
+  } catch (error) {
+    console.error('提交异常:', error)
+    uni.showToast({ title: error.error, icon: 'none' })
+  }
 
-
-  uni.showToast({ title: '行程发布成功！' })
   
-  // 重置表单
-  setTimeout(() => {
-    postingForm.From = ''
-    postingForm.To = ''
-    postingForm.DepartureTime = ''
-    postingForm.PlateNumber = ''
-    postingForm.SeatsAvailable = 1
-    postingForm.Fare = 50
-    postingForm.Note = ''
-    departureDate.value = ''
-    departureTime.value = ''
-    departureDateDisplay.value = ''
-  }, 1500)
+  // // 重置表单
+  // setTimeout(() => {
+  //   postingForm.From = ''
+  //   postingForm.To = ''
+  //   postingForm.DepartureTime = ''
+  //   postingForm.PlateNumber = ''
+  //   postingForm.SeatsAvailable = 1
+  //   postingForm.Fare = 50
+  //   postingForm.Note = ''
+  //   departureDate.value = ''
+  //   departureTime.value = ''
+  //   departureDateDisplay.value = ''
+  // }, 1500)
 }
 </script>
 
