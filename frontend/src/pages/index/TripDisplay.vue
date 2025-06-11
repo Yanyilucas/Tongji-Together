@@ -4,13 +4,13 @@
     <view class="map-block">
       <!-- 区块标题 -->
       <view class="block-header">
-        <text class="block-title">行程地图</text>
+        <text class="block-title">行程检索</text>
       </view>
       
       <!-- 位置输入区域 -->
       <view class="location-inputs">
         <view class="input-row">
-          <nut-icon name="location" size="16" color="#1989fa"></nut-icon>
+          <nut-icon name="location" size="16" ></nut-icon>
           <nut-input 
             v-model="postingFormAddrset.From" 
             placeholder="请输入出发地" 
@@ -22,7 +22,7 @@
         </view>
         
         <view class="input-row">
-          <nut-icon name="location" size="16" color="#ff4d4f"></nut-icon>
+          <nut-icon name="location" size="16"></nut-icon>
           <nut-input 
             v-model="postingFormAddrset.To" 
             placeholder="请输入目的地" 
@@ -43,13 +43,26 @@
           @click="selectSuggestion(item)"
         >
           <view class="suggestion-icon">
-            <nut-icon :name="item.type === 'From' ? 'location' : 'flag'" size="14" :color="item.type === 'From' ? '#1989fa' : '#ff4d4f'"></nut-icon>
+            <nut-icon name="location" size="14"></nut-icon>
           </view>
           <view class="suggestion-content">
             <text class="suggestion-title">{{ item.title }}</text>
             <text class="suggestion-address">{{ item.address }}</text>
           </view>
         </view>
+      </view>
+
+      <view class="searchbar-controls">
+        <nut-button type="info" size="small" plain @click="searchBarFilter">
+            <template #icon>
+              <nut-icon name="search" size="16"></nut-icon>
+            </template>
+        </nut-button>
+        <nut-button type="default" size="small" plain @click="searchBarClear">
+            <template #icon>
+              <nut-icon name="del" size="16"></nut-icon>
+            </template>
+        </nut-button>
       </view>
       
     </view>
@@ -69,12 +82,7 @@ const postingFormAddrset = reactive({
   ToLng: 0
 })
 
-const {API_TENCENT_MAP_SUGGESTION_GET, API_TENCENT_MAP_ROUTE_GET} = useRequest()
-
-// 使用单独的fromMark和toMark替代markers列表
-const fromMark = ref(null)
-const toMark = ref(null)
-
+const {API_TENCENT_MAP_SUGGESTION_GET} = useRequest()
 
 // 地点建议功能
 const suggestions = reactive({
@@ -96,10 +104,8 @@ const activeSuggestions = computed(() => {
   return []
 })
 
-// 清空所有标记和路径
-function clearMarkers() {
-  fromMark.value = null
-  toMark.value = null
+// 清空搜索栏
+function searchBarClear() {
   postingFormAddrset.From = ''
   postingFormAddrset.To = ''
   postingFormAddrset.FromLat = 0
@@ -108,16 +114,21 @@ function clearMarkers() {
   postingFormAddrset.ToLng = 0
 }
 
+function searchBarFilter() {
+  // 这里可以添加搜索过滤逻辑
+  // 例如，调用API获取符合条件的行程数据
+  console.log('搜索过滤功能待实现')
+}
+
+
 // 添加标记点
 function addMarker(location, label) {
   // 设置对应的标记，仅保存经纬度
   if (label === 'From') {
-    fromMark.value = { latitude: location.lat, longitude: location.lng }
     postingFormAddrset.FromLat = location.lat
     postingFormAddrset.FromLng = location.lng
     postingFormAddrset.From = location.title || location.address
   } else {
-    toMark.value = { latitude: location.lat, longitude: location.lng }
     postingFormAddrset.ToLat = location.lat
     postingFormAddrset.ToLng = location.lng
     postingFormAddrset.To = location.title || location.address
@@ -183,12 +194,7 @@ function selectSuggestion(item) {
 }
 
 
-// 组件挂载时初始化地图
-onMounted(() => {
-  // 初始设置空白地图
-  fromMark.value = null
-  toMark.value = null
-})
+
 </script>
 
 <style scoped>
@@ -310,6 +316,17 @@ onMounted(() => {
 .suggestion-address {
   font-size: 12px;
   color: #666;
+}
+
+
+/* 搜索栏控制按钮 */
+.searchbar-controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid #f5f5f5;
 }
 
 /* 响应式调整 */
