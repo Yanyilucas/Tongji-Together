@@ -10,7 +10,7 @@
       <!-- 位置输入区域 -->
       <view class="location-inputs">
         <view class="input-row">
-          <nut-icon name="location" size="16" color="#1989fa"></nut-icon>
+          <nut-icon name="location"></nut-icon>
           <nut-input 
             v-model="postingFormAddrset.From" 
             placeholder="请输入出发地" 
@@ -22,7 +22,7 @@
         </view>
         
         <view class="input-row">
-          <nut-icon name="location" size="16" color="#ff4d4f"></nut-icon>
+          <nut-icon name="location"></nut-icon>
           <nut-input 
             v-model="postingFormAddrset.To" 
             placeholder="请输入目的地" 
@@ -43,7 +43,7 @@
           @click="selectSuggestion(item)"
         >
           <view class="suggestion-icon">
-            <nut-icon :name="item.type === 'From' ? 'location' : 'flag'" size="14" :color="item.type === 'From' ? '#1989fa' : '#ff4d4f'"></nut-icon>
+            <nut-icon name= "location" size="14" ></nut-icon>
           </view>
           <view class="suggestion-content">
             <text class="suggestion-title">{{ item.title }}</text>

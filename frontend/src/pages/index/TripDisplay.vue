@@ -64,14 +64,32 @@
             </template>
         </nut-button>
       </view>
-      
+
     </view>
   </view>
+
+  <view v-if="results.length > 0" style="margin: 16px 20px;">
+    <TripCard v-for="item in pagedResults" :key="item.PostingID" :item="item" :showMap="true"/>
+  </view>
+  <view v-else style="margin: 16px 20px; text-align: center; color: #888;">
+    <nut-empty description="暂无匹配行程，请尝试修改搜索条件"/>
+  </view>
+
+    <nut-pagination
+      v-model="currentPage"
+      :total-items="results.length"
+      :items-per-page="itemsPerPage"
+      mode="simple"
+      @change="pageChange"
+      style="margin-top: 16px;"
+      v-if="results.length > 0"
+    />
+
 </template>
 
 <script setup>
-import { ref, reactive, computed} from 'vue'
-
+import { ref, reactive, computed } from 'vue'
+import TripCard from './TripCard.vue'
 // 表单数据 postingFormAddrset 初始化为响应式对象
 const postingFormAddrset = reactive({
   From: '',
@@ -82,7 +100,27 @@ const postingFormAddrset = reactive({
   ToLng: 0
 })
 
-const {API_TENCENT_MAP_SUGGESTION_GET} = useRequest()
+const results = ref([])
+const currentPage = ref(1)
+const itemsPerPage = 1
+
+const pagedResults = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return results.value.slice(start, start + itemsPerPage)
+})
+
+function pageChange(val) {
+  currentPage.value = val
+}
+
+// 页面被隐藏时清空结果
+onShow(() => {
+  results.value = []
+})
+
+
+
+const {API_TENCENT_MAP_SUGGESTION_GET, API_DRIVERPOSTING_GET} = useRequest()
 
 // 地点建议功能
 const suggestions = reactive({
@@ -114,12 +152,28 @@ function searchBarClear() {
   postingFormAddrset.ToLng = 0
 }
 
-function searchBarFilter() {
-  // 这里可以添加搜索过滤逻辑
-  // 例如，调用API获取符合条件的行程数据
-  console.log('搜索过滤功能待实现')
-}
+async function searchBarFilter() {
+  try {
+    const result = await API_DRIVERPOSTING_GET(
+      postingFormAddrset.From,
+      postingFormAddrset.To,
+      postingFormAddrset.FromLat,
+      postingFormAddrset.FromLng,
+      postingFormAddrset.ToLat,
+      postingFormAddrset.ToLng
+    )
 
+    if (Array.isArray(result)) {
+      results.value = result
+      console.log('搜索结果:', result)
+    } else {
+      console.warn('非预期格式:', result)
+      results.value = []
+    }
+  } catch (err) {
+    console.error('搜索请求失败:', err)
+  }
+}
 
 // 添加标记点
 function addMarker(location, label) {

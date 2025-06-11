@@ -28,8 +28,11 @@
     <view style="margin: 30rpx 20rpx 10rpx; font-size: 16px; font-weight: bold;">
       最近的拼车
     </view>
+     <!-- <view style="padding: 0 20rpx;" v-if=" myTrips.length > 0">
+      <TripCard v-for="item in myTrips" :key="item.PostingID" :item="item" :showMap="false"/>
+    </view> -->
     <view style="padding: 0 20rpx;">
-      <nut-empty description="最近没有拼车计划哦" />
+      <nut-empty  description="最近没有拼车计划哦" />
     </view>
 
 
@@ -92,7 +95,8 @@
 import { ref } from 'vue'
 import { useRequest } from '@/api'
 import { onShow } from '@dcloudio/uni-app'
-const { API_USERINFO_GET,API_REGISTER_DRIVER_POST,API_UNREGISTER_DRIVER_POST } = useRequest()
+import TripCard from '../index/TripCard.vue'
+const { API_USERINFO_GET,API_REGISTER_DRIVER_POST,API_UNREGISTER_DRIVER_POST,API_MYTRIP_GET } = useRequest()
 
 const showBottom = ref(false) 
 const userInfo = ref(null)
@@ -109,8 +113,14 @@ onShow(async () => {
       userInfo.value = null
     }
   }
-})
 
+})
+// try{
+  // const myTrips = await API_MYTRIP_GET()
+  // console.log('我的行程:', myTrips)
+  // }catch(err){
+  //   console.error('获取我的行程失败:', err)
+  // }
 
 function toLogin() {
   uni.navigateTo({ url: '/pages/user/login' })

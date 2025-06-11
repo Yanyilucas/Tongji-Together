@@ -3,9 +3,6 @@ import uuid
 from datetime import datetime
 from datetime import timedelta
 import math
-
-
-
 from flask import Flask, send_from_directory
 from flask import request, jsonify
 from flask_bcrypt import Bcrypt
@@ -304,55 +301,114 @@ def create_driver_posting():
     return jsonify({'message': '发布成功', 'posting': posting.serialize()}), 201
 
 # --------------------------------  行程列表接口  --------------------------------
-def _haversine(lat1, lon1, lat2, lon2):
+def _haversine(lat1, lng1, lat2, lng2):
     """
     Returns great‑circle distance in kilometres between two points on the Earth.
     """
     R = 6371.0
     phi1, phi2 = math.radians(lat1), math.radians(lat2)
     dphi = math.radians(lat2 - lat1)
-    dlambda = math.radians(lon2 - lon1)
+    dlambda = math.radians(lng2 - lng1)
     a = math.sin(dphi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2)**2
     return 2 * R * math.asin(math.sqrt(a))
 
 
 @app.route('/get_driver_postings', methods=['GET'])
+@jwt_required()
 def list_driver_postings():
-    """
-    列出未来行程，并支持根据乘客出发/目的地坐标进行匹配度排序。
-    
-    Query Params
-    -----------
-    from_lat, from_lng, to_lat, to_lng : float  可选，乘客选择的起终点坐标
-    limit                             : int    可选，返回条目数（默认 10）
-    """
-    limit      = request.args.get('limit', 10, type=int)
-    now        = db.func.now()
+    limit = request.args.get('limit', 2, type=int)
+    now = db.func.now()
+    identity = get_jwt_identity()
+    user_id = int(identity)
+    postings = DriverPosting.query.filter((DriverPosting.DepartureTime > now) &\
+       (DriverPosting.DrviverID!=user_id)).all()
 
-    # 仅取出发时间晚于当前时刻的行程
-    postings   = (DriverPosting.query
-                               .filter(DriverPosting.DepartureTime > now)
-                               .all())
-
-    # 若乘客坐标齐全，则按匹配度排序
     def _coord(name):
         try:
             return float(request.args.get(name))
         except (TypeError, ValueError):
             return None
 
-    flt, flng = _coord('from_lat'), _coord('from_lng')
-    tlt, tlng = _coord('to_lat'),   _coord('to_lng')
+    from_name = request.args.get('From', '')
+    to_name = request.args.get('To', '')
+    flt, flng = _coord('FromLat'), _coord('FromLng')
+    tlt, tlng = _coord('ToLat'), _coord('ToLng')
 
-    if None not in (flt, flng, tlt, tlng):
-        postings.sort(
-            key=lambda p: _haversine(flt, flng, p.FromLat, p.FromLng) +
-                          _haversine(tlt, tlng, p.ToLat,   p.ToLng)
-        )
+    # 排序逻辑保持不变
+    if from_name == '' and to_name != '' and None not in (tlt, tlng):
+        postings.sort(key=lambda p: _haversine(tlt, tlng, p.ToLat, p.ToLng))
+    elif from_name != '' and to_name == '' and None not in (flt, flng):
+        postings.sort(key=lambda p: _haversine(flt, flng, p.FromLat, p.FromLng))
+    elif from_name != '' and to_name != '' and None not in (flt, flng, tlt, tlng):
+        postings.sort(key=lambda p: (
+            _haversine(flt, flng, p.FromLat, p.FromLng) +
+            _haversine(tlt, tlng, p.ToLat, p.ToLng)
+        ))
     else:
-        postings.sort(key=lambda p: p.DepartureTime)   # 默认按时间
+        postings.sort(key=lambda p: p.DepartureTime)
 
-    return jsonify([p.serialize() for p in postings[:limit]]), 200
+    # 查询所有 PostingID
+    posting_ids = [p.PostingID for p in postings]
+
+    # 查询预约人数统计
+    counts = db.session.query(
+        RideJoin.PostingID,
+        db.func.count(RideJoin.JoinID).label('join_count')
+    ).filter(RideJoin.PostingID.in_(posting_ids)) \
+     .group_by(RideJoin.PostingID).all()
+
+    # 转成字典便于快速查找
+    join_count_map = {cid: cnt for cid, cnt in counts}
+
+    # 在每条 posting 上添加预约人数字段
+    result = []
+    for p in postings[:limit]:
+        obj = p.serialize()
+        obj['JoinCount'] = join_count_map.get(p.PostingID, 0)  # 默认0
+        obj['Tel'] = p.driver.Tel if p.driver else None
+        obj['Name'] = p.driver.Name if p.driver else None
+        result.append(obj)
+
+    return jsonify(result), 200
+
+@app.route('/my_trip', methods=['GET'])
+@jwt_required()
+def get_my_trip():
+    identity = get_jwt_identity()
+    user_id = int(identity)
+
+    now = db.func.now()
+
+    ride = (RideJoin.query
+        .join(DriverPosting, RideJoin.PostingID == DriverPosting.PostingID)
+        .filter(RideJoin.UserID == user_id)
+        .filter(DriverPosting.DepartureTime > now)
+        .order_by(DriverPosting.DepartureTime.asc())
+        .first())
+    if not ride:
+        return jsonify([]), 200
+    # 构造与 /get_driver_postings 相同的结构
+    postings = [ride.posting]
+    posting_ids = [p.PostingID for p in postings]
+
+    # 查询预约人数统计
+    counts = db.session.query(
+        RideJoin.PostingID,
+        db.func.count(RideJoin.JoinID).label('join_count')
+    ).filter(RideJoin.PostingID.in_(posting_ids)) \
+     .group_by(RideJoin.PostingID).all()
+
+    join_count_map = {cid: cnt for cid, cnt in counts}
+
+    result = []
+    for p in postings:
+        obj = p.serialize()
+        obj['JoinCount'] = join_count_map.get(p.PostingID, 0)  # 默认0
+        obj['Tel'] = p.driver.Tel if p.driver else None
+        obj['Name'] = p.driver.Name if p.driver else None
+        result.append(obj)
+
+    return jsonify(result), 200
 
 if __name__ == '__main__':
 	with app.app_context():

@@ -90,5 +90,52 @@ export default {
       }
     })
   },
+
+
+  // 获取车主发布的行程
+  API_DRIVERPOSTING_GET(From,To,FromLat, FromLng, ToLat, ToLng) {
+    return request({
+      url: '/get_driver_postings',
+      method: 'get',
+      params: {
+        From, // 出发地
+        To, // 目的地
+        FromLat, // 出发地纬度
+        FromLng, // 出发地经度
+        ToLat, // 目的地纬度
+        ToLng, // 目的地经度
+      }
+    })
+  },
+
+
+  API_MYTRIP_GET(){
+    return request({
+      url: '/my_trip',
+      method: 'get',
+    })
+  },
   
+  API_JOINTRIP_POST(data = {}) {
+    return request({
+      url: '/join_trip',
+      method: 'post',
+      data: {
+        PostingId: data.PostingId, // 行程ID
+        UserId: data.UserId, // 用户ID
+      }
+    })
+  },
+
+  API_CANCELTRIP_POST(data = {}) {
+    return request({
+      url: '/cancel_trip',
+      method: 'post',
+      data: {
+        PostingId: data.PostingId, // 行程ID
+        UserId: data.UserId, // 用户ID
+      }
+    })
+  }
+
 }
