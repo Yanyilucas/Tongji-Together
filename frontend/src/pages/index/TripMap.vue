@@ -12,7 +12,7 @@
         <view class="input-row">
           <nut-icon name="location" size="16" color="#1989fa"></nut-icon>
           <nut-input 
-            v-model="postingForm.From" 
+            v-model="postingFormAddrset.From" 
             placeholder="请输入出发地" 
             clearable
             @input="searchLocations('From')"
@@ -24,7 +24,7 @@
         <view class="input-row">
           <nut-icon name="location" size="16" color="#ff4d4f"></nut-icon>
           <nut-input 
-            v-model="postingForm.To" 
+            v-model="postingFormAddrset.To" 
             placeholder="请输入目的地" 
             clearable
             @input="searchLocations('To')"
@@ -125,6 +125,10 @@
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 
+// props/model
+
+const modelValue = defineModel('modelValue', { type: Object })
+
 // 地图相关逻辑
 const mapCenter = ref({ latitude: 31.2304, longitude: 121.4737 })
 const zoomLevel = ref(13)
@@ -133,14 +137,7 @@ const routePoints = ref([])
 const showDebugInfo = ref(false) // 调试信息开关
 const {API_TENCENT_MAP_SUGGESTION_GET, API_TENCENT_MAP_ROUTE_GET} = useRequest()
 // 表单数据
-const postingForm = reactive({
-  From: '',
-  To: '',
-  FromLat: 0,
-  FromLng: 0,
-  ToLat: 0,
-  ToLng: 0,
-})
+const postingFormAddrset = reactive(modelValue.value)
 
 // 使用单独的fromMark和toMark替代markers列表
 const fromMark = ref(null)
@@ -187,12 +184,12 @@ function zoomOut() {
 function clearMarkers() {
   fromMark.value = null
   toMark.value = null
-  postingForm.From = ''
-  postingForm.To = ''
-  postingForm.FromLat = 0
-  postingForm.FromLng = 0
-  postingForm.ToLat = 0
-  postingForm.ToLng = 0
+  modelValue.value.From = ''
+  modelValue.value.To = ''
+  modelValue.value.FromLat = 0
+  modelValue.value.FromLng = 0
+  modelValue.value.ToLat = 0
+  modelValue.value.ToLng = 0
   polyline.value = []
   routePoints.value = []
 }
@@ -260,14 +257,14 @@ function addMarker(location, label) {
   // 设置对应的标记
   if (label === 'From') {
     fromMark.value = marker
-    postingForm.FromLat = location.lat
-    postingForm.FromLng = location.lng
-    postingForm.From = location.title || location.address
+    modelValue.value.FromLat = location.lat
+    modelValue.value.FromLng = location.lng
+    modelValue.value.From = location.title || location.address
   } else {
     toMark.value = marker
-    postingForm.ToLat = location.lat
-    postingForm.ToLng = location.lng
-    postingForm.To = location.title || location.address
+    modelValue.value.ToLat = location.lat
+    modelValue.value.ToLng = location.lng
+    modelValue.value.To = location.title || location.address
   }
   
   updateMapCenter()
@@ -275,7 +272,6 @@ function addMarker(location, label) {
 
 
 // 路径规划API调用 - 修复参数错误版本
-// 路径规划API调用 - 基于实际数据结构的修复版本
 async function planRoute() {
   if (!fromMark.value || !toMark.value) return
   
@@ -448,7 +444,7 @@ watch(
 
 // 地点搜索函数
 async function searchLocations(type) {
-  const keyword = postingForm[type]
+  const keyword = postingFormAddrset[type]
   if (!keyword) {
     suggestions[type] = []
     return
@@ -477,7 +473,7 @@ async function searchLocations(type) {
 function showSuggestions(type) {
   suggestionsVisible[type] = true
   activeInput.value = type
-  if (postingForm[type]) {
+  if (postingFormAddrset[type]) {
     searchLocations(type)
   }
 }

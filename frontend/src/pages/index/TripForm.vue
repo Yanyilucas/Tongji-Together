@@ -2,26 +2,10 @@
   <view class="trip-form-container">
     <!-- 地图组件 -->
     <TripMap 
-      :from-address="postingForm.From" 
-      :to-address="postingForm.To"
-      @location-change="handleLocationChange"
+    v-model:modelValue="postingForm"
     />
     <!-- 表单 : 出发地和目的地的搜索应交给地图模块-->
     <nut-form class="form-card">
-      <!-- <nut-form-item label="出发地" required>
-        <nut-input 
-          v-model="postingForm.From" 
-          placeholder="请输入出发地" 
-          clearable
-        />
-      </nut-form-item>
-      <nut-form-item label="目的地" required>
-        <nut-input 
-          v-model="postingForm.To" 
-          placeholder="请输入目的地" 
-          clearable
-        />
-      </nut-form-item> -->
       <nut-form-item label="出发时间" required>
         <picker 
           mode="date" 
@@ -91,14 +75,14 @@ import TripMap from './TripMap.vue'
 
 // 表单数据
 const postingForm = reactive({
-  From: '',
+  From: '', 
   To: '',
   FromLat: 0,
   FromLng: 0,
   ToLat: 0,
   ToLng: 0,
   DepartureTime: '',
-  SeatsAvailable: 3,
+  SeatsAvailable: 1,
   Fare: 50,
   Note: '',
   PlateNumber: '',
@@ -109,16 +93,6 @@ const departureDate = ref('')
 const departureTime = ref('')
 const departureDateDisplay = ref('')
 
-// 处理位置变化事件
-function handleLocationChange(data) {
-  if (data.type === 'from') {
-    postingForm.FromLat = data.latitude
-    postingForm.FromLng = data.longitude
-  } else if (data.type === 'to') {
-    postingForm.ToLat = data.latitude
-    postingForm.ToLng = data.longitude
-  }
-}
 
 // 处理日期选择
 function handleDateChange(e) {
@@ -167,7 +141,11 @@ function submitForm() {
   }
   
   // 表单验证通过，提交逻辑...
-  console.log('表单提交:', postingForm)
+  for (const key in postingForm) {
+  console.log(`${key}:`, postingForm[key])
+}
+
+
   uni.showToast({ title: '行程发布成功！' })
   
   // 重置表单
@@ -176,7 +154,7 @@ function submitForm() {
     postingForm.To = ''
     postingForm.DepartureTime = ''
     postingForm.PlateNumber = ''
-    postingForm.SeatsAvailable = 3
+    postingForm.SeatsAvailable = 1
     postingForm.Fare = 50
     postingForm.Note = ''
     departureDate.value = ''

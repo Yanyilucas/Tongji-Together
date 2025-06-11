@@ -1,6 +1,7 @@
 import { request } from '../request'
 
 export default {
+  // 登录请求
   API_LOGIN_POST(data = {}) {
     return request({
       url: '/login',
@@ -9,6 +10,7 @@ export default {
     })
   },
 
+  // 注册请求
   API_REGISTER_POST(data = {}) {
     return request({
       url: '/register',
@@ -17,6 +19,7 @@ export default {
     })
   },
 
+  // 获取用户信息
   API_USERINFO_GET() {
     return request({
       url: '/userinfo',
@@ -24,6 +27,7 @@ export default {
     })
   },
 
+  // 注册车主
   API_REGISTER_DRIVER_POST() {
     return request({
       url: '/register_driver',
@@ -31,6 +35,7 @@ export default {
     })
   },
 
+  // 注销车主
   API_UNREGISTER_DRIVER_POST() {
     return request({
       url: '/unregister_driver',
@@ -38,7 +43,7 @@ export default {
     })
   },
 
-  // 
+  // 腾讯地图 搜索建议
   API_TENCENT_MAP_SUGGESTION_GET(keyword){
     return request({
       url: 'https://apis.map.qq.com/ws/place/v1/suggestion',
@@ -51,6 +56,7 @@ export default {
     })
   },
 
+  // 腾讯地图 路径规划
   API_TENCENT_MAP_ROUTE_GET(from, to) {
     return request({
       url: 'https://apis.map.qq.com/ws/direction/v1/driving',
@@ -64,5 +70,13 @@ export default {
     })
   },
 
-
+    // 车主发布行程
+    API_DRIVERPOSTING_POST(data = {}) {
+    return request({
+      url: '/driverposting',
+      method: 'post',
+      data
+    })
+  },
+  
 }
