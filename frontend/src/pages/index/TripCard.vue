@@ -86,6 +86,7 @@
 
 <script setup>
 import { computed } from 'vue'
+const {API_JOINTRIP_POST, API_CANCELTRIP_POST} = useRequest()
 
 const props = defineProps({
   item: {
@@ -164,22 +165,44 @@ const mapZoom = computed(() => {
 })
 
 
-function joinTrip() {
-  // 这里可以添加拼车逻辑
-  console.log('加入拼车:', props.item)
-  uni.showToast({
-    title: '已加入拼车',
-    icon: 'success'
-  })
+async function joinTrip() {
+  try{
+    const res = await API_JOINTRIP_POST({
+      PostingID: props.item.PostingID,
+    })
+    uni.showToast({
+      title: '拼车成功',
+      icon: 'success'
+    })
+    console.log('拼车成功:', res)
+  }catch (err) {
+    console.error('拼车失败:', err)
+    const message =
+      err?.response?.data?.error ||        // 后端自定义返回
+      err?.message ||                      // Axios 错误消息
+      '拼车失败'                           // 兜底
+    uni.showToast({ title: message, icon: 'none' })
+  }
 }
 
-function cancelTrip() {
-  // 这里可以添加取消拼车逻辑
-  console.log('取消拼车:', props.item)
-  uni.showToast({
-    title: '已取消拼车',
-    icon: 'success'
-  })
+async function cancelTrip() {
+  try{
+    const res = await API_CANCELTRIP_POST({
+      PostingID: props.item.PostingID,
+    })
+    uni.showToast({
+      title: '取消成功',
+      icon: 'success'
+    })
+    console.log('取消成功:', res)
+  }catch (err) {
+    console.error('取消失败:', err)
+    const message =
+      err?.response?.data?.error ||        // 后端自定义返回
+      err?.message ||                      // Axios 错误消息
+      '取消失败'                           // 兜底
+    uni.showToast({ title: message, icon: 'none' })
+  }
 }
 
 </script>

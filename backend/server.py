@@ -74,23 +74,24 @@ class User(db.Model):
 
 class DriverPosting(db.Model):
     __tablename__ = 'DriverPostings'
-    PostingID = db.Column(db.Integer     , primary_key=True, autoincrement=True)
-    DrviverID = db.Column(db.Integer     , db.ForeignKey('Users.UserID'), nullable=False)
-    From = db.Column(db.String(255)      , nullable=False)  # 出发地
-    To = db.Column(db.String(255)        , nullable=False)  # 目的地
+    PostingID      = db.Column(db.Integer     , primary_key=True, autoincrement=True)
+    DrviverID      = db.Column(db.Integer     , db.ForeignKey('Users.UserID'), nullable=False)
+    From           = db.Column(db.String(255)      , nullable=False)  # 出发地
+    To             = db.Column(db.String(255)        , nullable=False)  # 目的地
     
-    FromLat = db.Column(db.Float, nullable=False)  # 出发地纬度
-    FromLng = db.Column(db.Float, nullable=False)  # 出发地经度
-    ToLat = db.Column(db.Float, nullable=False)    # 目的地纬度
-    ToLng = db.Column(db.Float, nullable=False)    # 目的地经度
-    CreatedAt = db.Column(db.DateTime, server_default=db.func.now())  # 创建时间
+    FromLat        = db.Column(db.Float, nullable=False)  # 出发地纬度
+    FromLng        = db.Column(db.Float, nullable=False)  # 出发地经度
+    ToLat          = db.Column(db.Float, nullable=False)    # 目的地纬度
+    ToLng          = db.Column(db.Float, nullable=False)    # 目的地经度
+    CreatedAt      = db.Column(db.DateTime, server_default=db.func.now())  # 创建时间
     
-    PlateNumber = db.Column(db.String(20), nullable=False)  # 车牌号
-    DepartureTime = db.Column(db.DateTime, nullable=False)  # 出发时间
+    PlateNumber    = db.Column(db.String(20), nullable=False)  # 车牌号
+    DepartureTime  = db.Column(db.DateTime, nullable=False)  # 出发时间
     SeatsAvailable = db.Column(db.Integer, nullable=False)  # 可用座位数
-    Fare = db.Column(db.Float, nullable=False)  # 费用
-    Note = db.Column(db.String(255), nullable=True)  # 附加说明
-    driver = db.relationship('User', backref='driver_postings')
+    JoinCount      = db.Column(db.Integer, default=0)  # 预约人数统计
+    Fare           = db.Column(db.Float, nullable=False)  # 费用
+    Note           = db.Column(db.String(255), nullable=True)  # 附加说明
+    driver         = db.relationship('User', backref='driver_postings')
 
     
     def serialize(self):
@@ -350,21 +351,11 @@ def list_driver_postings():
     # 查询所有 PostingID
     posting_ids = [p.PostingID for p in postings]
 
-    # 查询预约人数统计
-    counts = db.session.query(
-        RideJoin.PostingID,
-        db.func.count(RideJoin.JoinID).label('join_count')
-    ).filter(RideJoin.PostingID.in_(posting_ids)) \
-     .group_by(RideJoin.PostingID).all()
-
-    # 转成字典便于快速查找
-    join_count_map = {cid: cnt for cid, cnt in counts}
 
     # 在每条 posting 上添加预约人数字段
     result = []
     for p in postings[:limit]:
         obj = p.serialize()
-        obj['JoinCount'] = join_count_map.get(p.PostingID, 0)  # 默认0
         obj['Tel'] = p.driver.Tel if p.driver else None
         obj['Name'] = p.driver.Name if p.driver else None
         result.append(obj)
@@ -409,6 +400,75 @@ def get_my_trip():
         result.append(obj)
 
     return jsonify(result), 200
+
+
+
+@app.route('/join_trip', methods=['POST'])
+@jwt_required()
+def join_trip():
+    identity = get_jwt_identity()
+    user_id = int(identity)
+
+    data = request.get_json()
+    if not data or 'PostingID' not in data:
+        return jsonify({'error': '缺少 PostingID'}), 400
+
+    posting_id = data['PostingID']
+    posting = DriverPosting.query.get(posting_id)
+    if not posting:
+        return jsonify({'error': '行程不存在'}), 404
+
+    # 检查用户是否已经加入该行程
+    existing_join = RideJoin.query.filter_by(UserID=user_id, PostingID=posting_id).first()
+    if existing_join:
+        return jsonify({'error': '您已加入该行程'}), 400
+
+    # 检查座位是否足够
+    if  posting.JoinCount==posting.SeatsAvailable:
+        return jsonify({'error': '该行程座位已满'}), 400
+
+    # 创建新的 RideJoin
+    new_join = RideJoin(UserID=user_id, PostingID=posting_id)
+    db.session.add(new_join)
+
+    # 更新可用座位数
+    posting.JoinCount += 1
+    db.session.commit()
+
+    return jsonify({'message': '加入行程成功', 'JoinID': new_join.JoinID}), 201
+
+
+@app.route('/cancel_trip', methods=['POST'])
+@jwt_required()
+def cancel_trip():
+    user_id = int(get_jwt_identity())
+    data = request.get_json()
+    posting_id = data.get('PostingID')
+
+    if not posting_id:
+        return jsonify({'error': 'PostingID is required'}), 400
+
+    ride = RideJoin.query.filter_by(PostingID=posting_id, UserID=user_id).first()
+
+    if not ride:
+        return jsonify({'error': '未找到对应的预约记录'}), 404
+
+    posting = DriverPosting.query.filter_by(PostingID=posting_id).first()
+    if not posting:
+        return jsonify({'error': '对应行程不存在'}), 404
+
+    db.session.delete(ride)
+
+    # 归还座位，仅当当前人数少于总数
+    if posting.JoinCount > 0:
+        posting.JoinCount -= 1
+
+    db.session.commit()
+
+    return jsonify({'message': '取消成功'}), 200
+
+
+
 
 if __name__ == '__main__':
 	with app.app_context():

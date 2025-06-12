@@ -121,8 +121,7 @@ export default {
       url: '/join_trip',
       method: 'post',
       data: {
-        PostingId: data.PostingId, // 行程ID
-        UserId: data.UserId, // 用户ID
+        PostingID: data.PostingID, // 行程ID
       }
     })
   },
@@ -132,8 +131,7 @@ export default {
       url: '/cancel_trip',
       method: 'post',
       data: {
-        PostingId: data.PostingId, // 行程ID
-        UserId: data.UserId, // 用户ID
+        PostingID: data.PostingID, // 行程ID
       }
     })
   }

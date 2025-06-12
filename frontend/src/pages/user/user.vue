@@ -15,23 +15,23 @@
       {{ userInfo.Name || '用户' }}，欢迎回来！
     </view>
 
-    <!-- 🔽 新增：最近的出行模块(仅车主) -->
+    <!-- 🔽 新增：最近的出行模块(仅车主)
     
     <view style="margin: 30rpx 20rpx 10rpx; font-size: 16px; font-weight: bold;" v-if="userInfo.isDriver">
       最近的出行
     </view>
     <view style="padding: 0 20rpx;" v-if="userInfo.isDriver">
       <nut-empty description="最近没有出行计划哦" />
-    </view>
+    </view> -->
 
     <!-- 🔽 新增：最近的拼车模块 -->
     <view style="margin: 30rpx 20rpx 10rpx; font-size: 16px; font-weight: bold;">
       最近的拼车
     </view>
-     <!-- <view style="padding: 0 20rpx;" v-if=" myTrips.length > 0">
+     <view style="padding: 0 20rpx;" v-if=" myTrips.length > 0">
       <TripCard v-for="item in myTrips" :key="item.PostingID" :item="item" :showMap="false"/>
-    </view> -->
-    <view style="padding: 0 20rpx;">
+    </view>
+    <view style="padding: 0 20rpx;" v-else>
       <nut-empty  description="最近没有拼车计划哦" />
     </view>
 
@@ -100,6 +100,8 @@ const { API_USERINFO_GET,API_REGISTER_DRIVER_POST,API_UNREGISTER_DRIVER_POST,API
 
 const showBottom = ref(false) 
 const userInfo = ref(null)
+const myTrips = ref([])
+
 onShow(async () => {
   if (userInfo.value) {
     console.log('用户信息已存在，直接使用')
@@ -114,13 +116,15 @@ onShow(async () => {
     }
   }
 
+  try{
+  myTrips.value = await API_MYTRIP_GET()
+  console.log('我的行程:', myTrips)
+  }catch(err){
+    console.error('获取我的行程失败:', err)
+  }
+
 })
-// try{
-  // const myTrips = await API_MYTRIP_GET()
-  // console.log('我的行程:', myTrips)
-  // }catch(err){
-  //   console.error('获取我的行程失败:', err)
-  // }
+
 
 function toLogin() {
   uni.navigateTo({ url: '/pages/user/login' })

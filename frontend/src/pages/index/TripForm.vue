@@ -146,9 +146,11 @@ function submitForm() {
 }
   try {
     // 调用API提交数据
-    API_DRIVERPOSTING_POST(postingForm)
-    uni.showToast({ title: '行程发布成功', icon: 'success' })
+    const res = API_DRIVERPOSTING_POST(postingForm)
+    uni.showToast({ title: '提交成功', icon: 'success' })
+    console.log('提交成功:', res)
     // 重置表单
+    
   setTimeout(() => {
     postingForm.From = ''
     postingForm.To = ''
@@ -168,6 +170,9 @@ function submitForm() {
   }
 
 }
+
+
+
 </script>
 
 <style scoped>
