@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "coverage>=7.9.1",
     "flask>=3.1.1",
     "flask-bcrypt>=1.0.1",
     "flask-cors>=6.0.0",
@@ -12,4 +13,5 @@ dependencies = [
     "flask-migrate>=4.1.0",
     "flask-sqlalchemy>=3.1.1",
     "ipdb>=0.13.13",
+    "pytest>=8.4.0",
 ]

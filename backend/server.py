@@ -204,7 +204,7 @@ def apply_driver():
     identity = get_jwt_identity()
     user_id = int(identity)
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return jsonify({'error': '用户不存在'}), 404
 
@@ -221,7 +221,7 @@ def cancel_driver():
     identity = get_jwt_identity()
     user_id = int(identity)
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return jsonify({'error': '用户不存在'}), 404
 
@@ -239,7 +239,7 @@ def create_driver_posting():
     identity = get_jwt_identity()
     user_id = int(identity)
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return jsonify({'error': '用户不存在'}), 404
 
@@ -414,7 +414,7 @@ def join_trip():
         return jsonify({'error': '缺少 PostingID'}), 400
 
     posting_id = data['PostingID']
-    posting = DriverPosting.query.get(posting_id)
+    posting = db.session.get(DriverPosting, posting_id)
     if not posting:
         return jsonify({'error': '行程不存在'}), 404
 
