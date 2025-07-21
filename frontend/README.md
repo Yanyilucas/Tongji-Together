@@ -45,37 +45,3 @@ pnpm dev:mp-weixin
 ```bash
 pnpm build:mp-weixin
 ```
-
-🍄 Git 提交
-
-```bash
-pnpm cz
-```
-
-## 🍣 Git 规范
-
-参考 [vue](https://github.com/vuejs/vue/blob/dev/.github/COMMIT_CONVENTION.md) 规范 ([Angular](https://github.com/conventional-changelog/conventional-changelog/tree/master/packages/conventional-changelog-angular))
-
-- `✨ feat` 增加新功能
-- `🐛 fix` 修复问题/BUG
-- `🎉 init` 初始化
-- `📝 docs` 文档变更
-- `💄 style` 代码格式(不影响代码运行的变动)
-- `♻️ refactor` 重构(既不是增加feature，也不是修复bug)
-- `⚡️ perf` 性能优化
-- `✅ test` 增加测试
-- `⏪️ revert` 回退
-- `🚀‍ build` 构建过程或辅助工具的变动
-- `👷 ci` CI 配置
-
-## 🌯 Git 提交流程
-
-```bash
-git add .
-
-pnpm run cz
-```
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=gitboyzcf/uni-preset-vue3-vite&type=Timeline)](https://star-history.com/#gitboyzcf/uni-preset-vue3-vite&Timeline)
